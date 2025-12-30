@@ -33,7 +33,9 @@ func _ready() -> void:
 	# ---- BLOCCA IL GIOCO ALL’AVVIO ----
 	player.set_physics_process(false)
 	player.set_process_input(false)
-
+	
+	if player.has_method("face_up_idle"):
+		player.face_up_idle()
 	# ---- INTRO ----
 	intro_layer.visible = true
 	intro_button.disabled = false

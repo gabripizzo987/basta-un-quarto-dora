@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3 uid="uid://brigi4d56ac4v"]
+
+[ext_resource type="Texture2D" uid="uid://dkpqni44ani7f" path="res://assets/backgrounds/Spritesheets/spritesheet_hospital_maternity.png" id="1_d8ihe"]
+
+[resource]
+atlas = ExtResource("1_d8ihe")
+region = Rect2(80.0371, 11.1132, 16.9067, 37.5925)

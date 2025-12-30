@@ -1,0 +1,7 @@
+[gd_resource type="AtlasTexture" load_steps=2 format=3 uid="uid://ccem8bd2bm6ip"]
+
+[ext_resource type="Texture2D" uid="uid://cdo20mq472jmf" path="res://assets/backgrounds/Spritesheets/spritesheet_hospital_lab.png" id="1_krenl"]
+
+[resource]
+atlas = ExtResource("1_krenl")
+region = Rect2(2, 64, 28, 17)

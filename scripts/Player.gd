@@ -68,3 +68,7 @@ func update_animation(input_vector: Vector2) -> void:
 			else:
 				last_direction = "up"
 				anim.play("walk_up")
+				
+func face_up_idle() -> void:
+	last_direction = "up"
+	update_animation(Vector2.ZERO)

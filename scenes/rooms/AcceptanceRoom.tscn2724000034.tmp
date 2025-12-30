@@ -1,4 +1,4 @@
-[gd_scene load_steps=124 format=4 uid="uid://d1obhnv260tkl"]
+[gd_scene load_steps=123 format=4 uid="uid://d1obhnv260tkl"]
 
 [ext_resource type="Texture2D" uid="uid://cmu17pkqgpow8" path="res://assets/backgrounds/Spritesheets/Room_Builder_free_32x32.png" id="1_ub8uq"]
 [ext_resource type="Script" uid="uid://8iwkvfdhaba1" path="res://scripts/AcceptanceRoom.gd" id="1_v7e3e"]
@@ -20081,9 +20081,6 @@ size = Vector2(16.25, 8.95833)
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wryu8"]
 size = Vector2(13.125, 12.7083)
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_3np3y"]
-size = Vector2(63.3333, 20)
-
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_kxxtl"]
 texture = ExtResource("2_im2un")
 0:0/0 = 0
@@ -24022,10 +24019,6 @@ shape = SubResource("RectangleShape2D_radfe")
 [node name="CollisionShape2D3" type="CollisionShape2D" parent="Environment/divano2/StaticBodyTavolo"]
 position = Vector2(-11.5625, 14.6875)
 shape = SubResource("RectangleShape2D_wryu8")
-
-[node name="CollisionShape2D4" type="CollisionShape2D" parent="Environment/divano2/StaticBodyTavolo"]
-position = Vector2(94.5833, 43.75)
-shape = SubResource("RectangleShape2D_3np3y")
 
 [node name="poltronaScri" type="TileMapLayer" parent="Environment"]
 z_index = 1
