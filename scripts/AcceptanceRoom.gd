@@ -101,5 +101,4 @@ func _on_continue_pressed() -> void:
 		player.set_physics_process(true)
 		player.set_process_input(true)
 
-	# TODO più avanti:
-	# get_tree().change_scene_to_file("res://scenes/EmocromoRoom.tscn").
+	get_tree().change_scene_to_file("res://scenes/EmocromoRoom.tscn")

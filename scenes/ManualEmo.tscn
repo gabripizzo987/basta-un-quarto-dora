@@ -1,0 +1,674 @@
+[gd_scene load_steps=34 format=3 uid="uid://dw3rt8mc0te2p"]
+
+[ext_resource type="Script" uid="uid://baf3jxln24c14" path="res://scenes/Game.gd" id="1_b4huw"]
+[ext_resource type="FontFile" uid="uid://dq7fpp4xq1fid" path="res://fonts/Montserrat-MediumItalic.ttf" id="2_fvrux"]
+[ext_resource type="Script" uid="uid://hy4h54fpsme6" path="res://scripts/PanelManual.gd" id="3_ha2mf"]
+[ext_resource type="Texture2D" uid="uid://bk5jewqoslqw6" path="res://assets/ui/book_middle (1).png" id="4_he85r"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="5_fvrux"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qbsmt"]
+content_margin_left = 16.0
+content_margin_top = 14.0
+content_margin_right = 16.0
+content_margin_bottom = 14.0
+bg_color = Color(0.109804, 0.117647, 0.14902, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.227451, 0.227451, 0.27451, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_78awf"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s0nni"]
+bg_color = Color(4.81308e-06, 0.559111, 0.00559741, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_aug50"]
+bg_color = Color(1.02278e-06, 0.408965, 0.0028556, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kiw3p"]
+bg_color = Color(0, 0.476434, 0.00408938, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_400sg"]
+bg_color = Color(0.973532, 0.000496348, 0.110135, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_g4kob"]
+bg_color = Color(0.744987, 0, 0.0732879, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qy1jj"]
+bg_color = Color(0.875577, 0, 0.0958868, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_vjgi4"]
+bg_color = Color(0.142878, 0.16003, 0.215754, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_kyk2p"]
+bg_color = Color(0.09302, 0.105937, 0.147936, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_45i86"]
+bg_color = Color(0.12549, 0.141176, 0.192157, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bneo8"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3xj3m"]
+bg_color = Color(0.125426, 0.14297, 0.191205, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_mcffj"]
+bg_color = Color(0.0941176, 0.105882, 0.14902, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2rd6h"]
+bg_color = Color(0.105882, 0.121569, 0.164706, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jbgew"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ocgqw"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a85ww"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jhsr3"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7ua8r"]
+bg_color = Color(0.12549, 0.141176, 0.192157, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_0bq3a"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r7sob"]
+bg_color = Color(0.09302, 0.105937, 0.147936, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_754j2"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y5y3l"]
+bg_color = Color(0.105882, 0.121569, 0.164706, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sv1m6"]
+bg_color = Color(0.365323, 0.141935, 0.0491849, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_attvq"]
+bg_color = Color(0.646764, 0.191311, 0.149225, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_a8wo8"]
+bg_color = Color(0.164706, 0.105882, 0.105882, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cpr0p"]
+bg_color = Color(0.109804, 0.117647, 0.14902, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.227451, 0.227451, 0.27451, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+
+[node name="TriageUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -1.0
+offset_top = -1.0
+offset_right = -1.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_b4huw")
+
+[node name="PanelAccept" type="Panel" parent="."]
+custom_minimum_size = Vector2(460, 340)
+layout_mode = 1
+anchors_preset = 11
+anchor_left = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 0
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_qbsmt")
+
+[node name="ContentVBox" type="VBoxContainer" parent="PanelAccept"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 10
+
+[node name="LabelName" type="Label" parent="PanelAccept/ContentVBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_fvrux")
+theme_override_font_sizes/font_size = 22
+text = "Nome donatore"
+
+[node name="LabelInfo" type="Label" parent="PanelAccept/ContentVBox"]
+custom_minimum_size = Vector2(40, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.901961, 0.901961, 0.901961, 1)
+theme_override_fonts/font = ExtResource("2_fvrux")
+theme_override_font_sizes/font_size = 16
+text = "Dati donatore...
+"
+autowrap_mode = 2
+
+[node name="LabelFeedback" type="Label" parent="PanelAccept/ContentVBox"]
+layout_mode = 2
+theme_override_fonts/font = ExtResource("2_fvrux")
+text = "Feedback
+"
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="PanelAccept/ContentVBox"]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="ButtonAccept" type="Button" parent="PanelAccept/ContentVBox/ButtonsHBox"]
+layout_mode = 2
+theme_override_styles/disabled = SubResource("StyleBoxFlat_78awf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_s0nni")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_aug50")
+theme_override_styles/normal = SubResource("StyleBoxFlat_kiw3p")
+text = "Idoneo
+"
+
+[node name="ButtonReject" type="Button" parent="PanelAccept/ContentVBox/ButtonsHBox"]
+layout_mode = 2
+theme_override_styles/hover = SubResource("StyleBoxFlat_400sg")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_g4kob")
+theme_override_styles/normal = SubResource("StyleBoxFlat_qy1jj")
+text = "Non idoneo"
+
+[node name="ButtonManual" type="Button" parent="."]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -76.0
+offset_bottom = 31.0
+grow_horizontal = 0
+theme_override_fonts/font = ExtResource("5_fvrux")
+theme_override_styles/hover = SubResource("StyleBoxFlat_vjgi4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_kyk2p")
+theme_override_styles/normal = SubResource("StyleBoxFlat_45i86")
+text = "📘 Manuale"
+
+[node name="PanelManual" type="Control" parent="."]
+custom_minimum_size = Vector2(800, 500)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -500.0
+offset_top = -300.0
+offset_right = 500.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_ha2mf")
+
+[node name="BookBG" type="TextureRect" parent="PanelManual"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_he85r")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LabelTitle" type="Label" parent="PanelManual"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 238.0
+offset_top = 72.0
+offset_right = 464.0
+offset_bottom = 95.0
+theme_override_colors/font_color = Color(0.352558, 0.000149735, 0.382259, 1)
+theme_override_fonts/font = ExtResource("5_fvrux")
+text = "Emocromo"
+
+[node name="HBoxNav" type="HBoxContainer" parent="PanelManual"]
+layout_mode = 0
+offset_left = 416.0
+offset_top = 10.0
+offset_right = 585.0
+offset_bottom = 50.0
+
+[node name="ButtonPrev" type="Button" parent="PanelManual/HBoxNav"]
+custom_minimum_size = Vector2(40, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_styles/disabled = SubResource("StyleBoxFlat_bneo8")
+theme_override_styles/hover = SubResource("StyleBoxFlat_3xj3m")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_mcffj")
+theme_override_styles/normal = SubResource("StyleBoxFlat_2rd6h")
+text = "◀"
+
+[node name="LabelPage" type="Label" parent="PanelManual/HBoxNav"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94902, 0.94902, 0.94902, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.501961)
+theme_override_colors/font_outline_color = Color(0.0214346, 0.0214346, 0.0214346, 1)
+theme_override_fonts/font = ExtResource("5_fvrux")
+text = "Pagina 1/1"
+
+[node name="ButtonNext" type="Button" parent="PanelManual/HBoxNav"]
+custom_minimum_size = Vector2(40, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_styles/disabled = SubResource("StyleBoxFlat_jbgew")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_ocgqw")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_a85ww")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxFlat_jhsr3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_7ua8r")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxFlat_0bq3a")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_r7sob")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxFlat_754j2")
+theme_override_styles/normal = SubResource("StyleBoxFlat_y5y3l")
+text = "▶"
+
+[node name="PagesRow" type="HBoxContainer" parent="PanelManual"]
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("5_fvrux")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "L’emocromo è un esame del sangue
+che misura le principali componenti cellulari
+(emoglobina, globuli bianchi, piastrine).
+
+Serve a valutare se il donatore
+può donare sangue in sicurezza.
+
+Questa analisi viene effettuata
+dopo il controllo clinico iniziale
+e prima della donazione vera e propria."
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("5_fvrux")
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Emogoblina (Hb) – Parametro centrale[/font][/color]
+
+Valore minimo per la donazione di sangue intero in Italia:
+
+Uomini: ≥ 13,5 g/dL
+
+Donne: ≥ 12,5 g/dL
+
+• sotto soglia → ❌ non idoneo
+
+• nella norma → ✔ passi agli altri controlli"
+
+[node name="PagesRow2" type="HBoxContainer" parent="PanelManual"]
+visible = false
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow2"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("5_fvrux")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Globuli Bianchi[/font][/color]
+
+I globuli bianchi indicano lo stato generale di salute del donatore.
+
+• Range di riferimento → 4.0 – 11.0 ×10³/µL
+
+• Valore fuori range → possibile problematica
+
+• Valore nella norma → ✔ idoneo al controllo successivo"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow2"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("5_fvrux")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Piastrine[/font][/color]
+
+Le piastrine sono fondamentali
+per la coagulazione del sangue.
+
+• Range di riferimento → 150 – 400 ×10³/µL
+
+• Valore troppo basso → ❌ possibile rischio di sanguinamento
+
+• Valore nella norma → ✔ parametro adeguato"
+
+[node name="PagesRow3" type="HBoxContainer" parent="PanelManual"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow3"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("5_fvrux")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]🩸 Procedura di analisi[/font][/color]
+
+1. Viene eseguito il prelievo del campione di sangue
+
+2. Il campione viene analizzato dall’emocromometro
+
+3. Dopo l’analisi vengono mostrati i valori principali
+
+4. L’operatore valuta l’idoneità del donatore"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow3"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("5_fvrux")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]✅ Valutazione finale [/font] [/color]
+
+Il donatore è considerato idoneo se:
+
+•  l’emoglobina è nei valori minimi richiesti
+
+•  globuli bianchi e piastrine rientrano nei range di riferimento
+
+•  l’analisi è stata eseguita correttamente
+
+In caso contrario, il donatore viene rimandato."
+
+[node name="ButtonCloseManual" type="Button" parent="PanelManual"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -225.0
+offset_top = -51.0
+offset_right = -167.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("5_fvrux")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sv1m6")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_attvq")
+theme_override_styles/normal = SubResource("StyleBoxFlat_a8wo8")
+text = "Chiudi
+"
+
+[node name="PanelEmocromo" type="Panel" parent="."]
+visible = false
+custom_minimum_size = Vector2(800, 400)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LabelTitleEmo" type="Label" parent="PanelEmocromo"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 97.0
+offset_right = 267.0
+offset_bottom = 120.0
+theme_override_fonts/font = ExtResource("2_fvrux")
+text = "Controllo emocromo / pressione"
+
+[node name="LabelBP" type="Label" parent="PanelEmocromo"]
+layout_mode = 0
+offset_left = 17.0
+offset_top = 64.0
+offset_right = 192.0
+offset_bottom = 87.0
+theme_override_fonts/font = ExtResource("2_fvrux")
+text = "Pressione: -- / -- mmHg"
+
+[node name="LabelBPInfo" type="Label" parent="PanelEmocromo"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 32.0
+offset_right = 199.0
+offset_bottom = 55.0
+theme_override_fonts/font = ExtResource("2_fvrux")
+text = "Valutazione pressione..."
+
+[node name="LabelFeedbackEmo" type="Label" parent="PanelEmocromo"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+theme_override_fonts/font = ExtResource("2_fvrux")
+
+[node name="ButtonCoffee" type="Button" parent="PanelEmocromo"]
+layout_mode = 0
+offset_left = 444.0
+offset_top = 228.0
+offset_right = 610.0
+offset_bottom = 259.0
+text = "Dai caffè zuccherato"
+
+[node name="ButtonWait" type="Button" parent="PanelEmocromo"]
+layout_mode = 0
+offset_left = 243.0
+offset_top = 229.0
+offset_right = 388.0
+offset_bottom = 260.0
+text = "Aspetta e rivaluta"
+
+[node name="ButtonProceedDonation" type="Button" parent="PanelEmocromo"]
+layout_mode = 0
+offset_left = 15.0
+offset_top = 225.0
+offset_right = 198.0
+offset_bottom = 256.0
+text = "Procedi alla donazione"
+
+[node name="ErrorPopup" type="Panel" parent="."]
+visible = false
+custom_minimum_size = Vector2(520, 220)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_cpr0p")
+
+[node name="Margin" type="MarginContainer" parent="ErrorPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBox" type="VBoxContainer" parent="ErrorPopup/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Title" type="Label" parent="ErrorPopup/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 22
+text = "Errore"
+
+[node name="ErrorText" type="Label" parent="ErrorPopup/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+autowrap_mode = 2
+
+[node name="ButtonsRow" type="HBoxContainer" parent="ErrorPopup/Margin/VBox"]
+layout_mode = 2
+alignment = 1
+
+[node name="ButtonOk" type="Button" parent="ErrorPopup/Margin/VBox/ButtonsRow"]
+layout_mode = 2
+text = "OK
+"
+
+[connection signal="pressed" from="PanelAccept/ContentVBox/ButtonsHBox/ButtonAccept" to="." method="_on_button_accept_pressed"]
+[connection signal="pressed" from="PanelAccept/ContentVBox/ButtonsHBox/ButtonReject" to="." method="_on_button_reject_pressed"]
+[connection signal="pressed" from="ButtonManual" to="." method="_on_button_manual_pressed"]
+[connection signal="pressed" from="ButtonManual" to="PanelManual" method="_on_button_manual_pressed"]
+[connection signal="pressed" from="PanelManual/ButtonCloseManual" to="." method="_on_button_close_manual_pressed"]
+[connection signal="pressed" from="PanelEmocromo/ButtonCoffee" to="." method="_on_button_coffee_pressed"]
+[connection signal="pressed" from="PanelEmocromo/ButtonWait" to="." method="_on_button_wait_pressed"]
+[connection signal="pressed" from="PanelEmocromo/ButtonProceedDonation" to="." method="_on_button_proceed_donation_pressed"]
+[connection signal="pressed" from="ErrorPopup/Margin/VBox/ButtonsRow/ButtonOk" to="." method="_on_button_ok_pressed"]
