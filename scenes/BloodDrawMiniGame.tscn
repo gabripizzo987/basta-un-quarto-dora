@@ -62,7 +62,7 @@ layout_mode = 0
 offset_left = 129.0
 offset_top = 339.0
 offset_right = 196.0
-offset_bottom = 373.0
+offset_bottom = 375.0
 color = Color(6.01634e-07, 0.710683, 0, 1)
 
 [node name="Needle" type="TextureRect" parent="Frame/Margin/VBox/PlayField"]

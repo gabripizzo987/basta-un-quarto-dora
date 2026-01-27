@@ -35,16 +35,14 @@ func _physics_process(delta: float) -> void:
 	move_and_slide()
 	update_animation(input_vector)
 
-func _unhandled_input(event: InputEvent) -> void:
-	# Interazione SOLO con E
+# ✅ QUI È IL FIX: usa _input, non _unhandled_input
+func _input(event: InputEvent) -> void:
 	if not can_move:
 		return
 
 	if event.is_action_pressed("interact"):
-		if interact_target != null:
-			# chiama una funzione sul donatore
-			if interact_target.has_method("interact"):
-				interact_target.interact(self)
+		if interact_target != null and interact_target.has_method("interact"):
+			interact_target.interact(self)
 
 func update_animation(input_vector: Vector2) -> void:
 	if input_vector == Vector2.ZERO:
@@ -68,7 +66,7 @@ func update_animation(input_vector: Vector2) -> void:
 			else:
 				last_direction = "up"
 				anim.play("walk_up")
-				
+
 func face_up_idle() -> void:
 	last_direction = "up"
 	update_animation(Vector2.ZERO)

@@ -18,10 +18,10 @@
 [ext_resource type="Texture2D" uid="uid://ccem8bd2bm6ip" path="res://new_atlas_texture.tres" id="11_kxxtl"]
 [ext_resource type="Texture2D" uid="uid://brigi4d56ac4v" path="res://new_atlas_texture1.tres" id="12_365g4"]
 [ext_resource type="PackedScene" uid="uid://b4hmr3d0m4lhu" path="res://scenes/Game.tscn" id="12_mm4um"]
-[ext_resource type="FontFile" uid="uid://raocth0puh2p" path="res://fonts/Inter_28pt-SemiBold.ttf" id="15_fpkok"]
-[ext_resource type="FontFile" uid="uid://cnn27dbe8yp6m" path="res://fonts/Inter_28pt-Regular.ttf" id="16_67vcl"]
-[ext_resource type="FontFile" uid="uid://ocj1mw6c80ea" path="res://fonts/FontIntro.tres" id="16_fpkok"]
 [ext_resource type="Theme" uid="uid://rlxur78jvedg" path="res://PixelTheme.tres" id="20_365g4"]
+[ext_resource type="PackedScene" uid="uid://dy0rm6todo3qy" path="res://scenes/TriageDragUI.tscn" id="21_p1knn"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="22_p1knn"]
+[ext_resource type="Script" uid="uid://c0saw7b8orrak" path="res://scripts/InteractPrompt.gd" id="22_radfe"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_p1knn"]
 resource_name = "walls"
@@ -23418,22 +23418,6 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_v7e3e"]
 size = Vector2(9, 20)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wfq73"]
-content_margin_left = 8.0
-content_margin_top = 4.0
-content_margin_right = 8.0
-content_margin_bottom = 4.0
-bg_color = Color(0.0666667, 0.0941176, 0.152941, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.176471, 0.215686, 0.282353, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_wfq73"]
 size = Vector2(20, 2)
 
@@ -23508,6 +23492,22 @@ animations = [{
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_67vcl"]
 size = Vector2(6, 20)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wfq73"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.0666667, 0.0941176, 0.152941, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.176471, 0.215686, 0.282353, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4bfal"]
 bg_color = Color(0.117647, 0.117647, 0.141176, 1)
@@ -23714,54 +23714,22 @@ position = Vector2(18, -48)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Gabriele"]
 sprite_frames = SubResource("SpriteFrames_tpodt")
 
-[node name="Area2D" type="Area2D" parent="Gabriele"]
+[node name="Area2D" type="Area2D" parent="Gabriele" groups=["donor_area"]]
 script = ExtResource("8_4bfal")
 game_ui_path = NodePath("../../UI/TriageUI")
+prompt_path = NodePath("../../UI/InteractPrompt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Gabriele/Area2D"]
 position = Vector2(-0.5, -14)
 shape = SubResource("RectangleShape2D_v7e3e")
 
-[node name="InteractPrompt" type="Control" parent="Gabriele"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = -22.0
-offset_top = -64.0
-offset_right = -22.0
-offset_bottom = -64.0
-mouse_filter = 2
-
-[node name="Pill" type="PanelContainer" parent="Gabriele/InteractPrompt"]
-layout_mode = 0
-offset_left = -21.0
-offset_top = 7.0
-offset_right = 64.0
-offset_bottom = 37.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wfq73")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Gabriele/InteractPrompt/Pill"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Key" type="Label" parent="Gabriele/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "E"
-uppercase = true
-
-[node name="Text" type="Label" parent="Gabriele/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "Interagisci"
-
 [node name="Collisione" type="CollisionShape2D" parent="Gabriele"]
 z_index = 2
-position = Vector2(0, -8.25)
+position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_wfq73")
+
+[node name="PromptAnchor" type="Marker2D" parent="Gabriele"]
+position = Vector2(0, 5)
 
 [node name="Claudio" type="CharacterBody2D" parent="."]
 position = Vector2(56, -48)
@@ -23770,56 +23738,23 @@ position = Vector2(56, -48)
 texture_filter = 1
 sprite_frames = SubResource("SpriteFrames_sh6iu")
 
-[node name="Area2D" type="Area2D" parent="Claudio"]
+[node name="Area2D" type="Area2D" parent="Claudio" groups=["donor_area"]]
 script = ExtResource("8_4bfal")
 slot_index = 1
 game_ui_path = NodePath("../../UI/TriageUI")
+prompt_path = NodePath("../../UI/InteractPrompt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Claudio/Area2D"]
 position = Vector2(-0.5, -14)
 shape = SubResource("RectangleShape2D_4bfal")
 
-[node name="InteractPrompt" type="Control" parent="Claudio"]
-texture_filter = 1
-layout_mode = 3
-anchors_preset = 0
-offset_left = -21.0
-offset_top = -64.0
-offset_right = -21.0
-offset_bottom = -64.0
-mouse_filter = 2
-
-[node name="Pill" type="PanelContainer" parent="Claudio/InteractPrompt"]
-layout_mode = 0
-offset_left = -21.0
-offset_top = 7.0
-offset_right = 64.0
-offset_bottom = 37.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wfq73")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Claudio/InteractPrompt/Pill"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Key" type="Label" parent="Claudio/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "E"
-uppercase = true
-
-[node name="Text" type="Label" parent="Claudio/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "Interagisci"
-
 [node name="Collisione" type="CollisionShape2D" parent="Claudio"]
 z_index = 2
 position = Vector2(-1, -8)
 shape = SubResource("RectangleShape2D_wfq73")
+
+[node name="PromptAnchor" type="Marker2D" parent="Claudio"]
+position = Vector2(0, 5)
 
 [node name="Daniele" type="CharacterBody2D" parent="."]
 texture_filter = 1
@@ -23828,55 +23763,23 @@ position = Vector2(95, -48)
 [node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Daniele"]
 sprite_frames = SubResource("SpriteFrames_mckxq")
 
-[node name="Area2D" type="Area2D" parent="Daniele"]
+[node name="Area2D" type="Area2D" parent="Daniele" groups=["donor_area"]]
 script = ExtResource("8_4bfal")
 slot_index = 2
 game_ui_path = NodePath("../../UI/TriageUI")
+prompt_path = NodePath("../../UI/InteractPrompt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Daniele/Area2D"]
 position = Vector2(0, -14)
 shape = SubResource("RectangleShape2D_nmquo")
 
-[node name="InteractPrompt" type="Control" parent="Daniele"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = -23.0
-offset_top = -64.0
-offset_right = -23.0
-offset_bottom = -64.0
-mouse_filter = 2
-
-[node name="Pill" type="PanelContainer" parent="Daniele/InteractPrompt"]
-layout_mode = 0
-offset_left = -21.0
-offset_top = 7.0
-offset_right = 64.0
-offset_bottom = 37.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wfq73")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Daniele/InteractPrompt/Pill"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Key" type="Label" parent="Daniele/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "E"
-uppercase = true
-
-[node name="Text" type="Label" parent="Daniele/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "Interagisci"
-
 [node name="Collisione" type="CollisionShape2D" parent="Daniele"]
 z_index = 2
 position = Vector2(0, -8)
 shape = SubResource("RectangleShape2D_wfq73")
+
+[node name="PromptAnchor" type="Marker2D" parent="Daniele"]
+position = Vector2(0, 5)
 
 [node name="Anna" type="CharacterBody2D" parent="."]
 position = Vector2(-2, -55)
@@ -23886,56 +23789,23 @@ texture_filter = 1
 position = Vector2(135, 7)
 sprite_frames = SubResource("SpriteFrames_8babg")
 
-[node name="Area2D" type="Area2D" parent="Anna"]
+[node name="Area2D" type="Area2D" parent="Anna" groups=["donor_area"]]
 script = ExtResource("8_4bfal")
 slot_index = 3
 game_ui_path = NodePath("../../UI/TriageUI")
+prompt_path = NodePath("../../UI/InteractPrompt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Anna/Area2D"]
 position = Vector2(135.5, -8)
 shape = SubResource("RectangleShape2D_fpkok")
 
-[node name="InteractPrompt" type="Control" parent="Anna"]
-texture_filter = 1
-layout_mode = 3
-anchors_preset = 0
-offset_left = 115.0
-offset_top = -57.0
-offset_right = 115.0
-offset_bottom = -57.0
-mouse_filter = 2
-
-[node name="Pill" type="PanelContainer" parent="Anna/InteractPrompt"]
-layout_mode = 0
-offset_left = -21.0
-offset_top = 7.0
-offset_right = 64.0
-offset_bottom = 37.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wfq73")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Anna/InteractPrompt/Pill"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Key" type="Label" parent="Anna/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "E"
-uppercase = true
-
-[node name="Text" type="Label" parent="Anna/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "Interagisci"
-
 [node name="Collisione" type="CollisionShape2D" parent="Anna"]
 z_index = 2
 position = Vector2(135, -1)
 shape = SubResource("RectangleShape2D_wfq73")
+
+[node name="PromptAnchor" type="Marker2D" parent="Anna"]
+position = Vector2(135, 12)
 
 [node name="Elisa" type="CharacterBody2D" parent="."]
 position = Vector2(-1, -55)
@@ -23945,61 +23815,84 @@ texture_filter = 1
 position = Vector2(173, 7)
 sprite_frames = SubResource("SpriteFrames_yttcj")
 
-[node name="Area2D" type="Area2D" parent="Elisa"]
+[node name="Area2D" type="Area2D" parent="Elisa" groups=["donor_area"]]
 script = ExtResource("8_4bfal")
 slot_index = 4
 game_ui_path = NodePath("../../UI/TriageUI")
+prompt_path = NodePath("../../UI/InteractPrompt")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Elisa/Area2D"]
 position = Vector2(173, -7)
 shape = SubResource("RectangleShape2D_67vcl")
-
-[node name="InteractPrompt" type="Control" parent="Elisa"]
-texture_filter = 1
-layout_mode = 3
-anchors_preset = 0
-offset_left = 152.0
-offset_top = -57.0
-offset_right = 152.0
-offset_bottom = -57.0
-mouse_filter = 2
-
-[node name="Pill" type="PanelContainer" parent="Elisa/InteractPrompt"]
-layout_mode = 0
-offset_left = -21.0
-offset_top = 7.0
-offset_right = 64.0
-offset_bottom = 37.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_wfq73")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Elisa/InteractPrompt/Pill"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Key" type="Label" parent="Elisa/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "E"
-uppercase = true
-
-[node name="Text" type="Label" parent="Elisa/InteractPrompt/Pill/HBoxContainer"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("16_67vcl")
-theme_override_font_sizes/font_size = 12
-text = "Interagisci"
 
 [node name="Collisione" type="CollisionShape2D" parent="Elisa"]
 z_index = 2
 position = Vector2(172, -1)
 shape = SubResource("RectangleShape2D_wfq73")
 
+[node name="PromptAnchor" type="Marker2D" parent="Elisa"]
+position = Vector2(173, 11)
+
 [node name="UI" type="CanvasLayer" parent="."]
 
-[node name="TriageUI" parent="UI" instance=ExtResource("12_mm4um")]
+[node name="TriageUI" parent="UI" groups=["triage_logic"] instance=ExtResource("12_mm4um")]
 theme = ExtResource("20_365g4")
+
+[node name="TriageDragUI" parent="UI" instance=ExtResource("21_p1knn")]
+mouse_filter = 2
+
+[node name="InteractPrompt" type="Control" parent="UI"]
+z_index = 4096
+texture_filter = 1
+custom_minimum_size = Vector2(220, 20)
+layout_mode = 3
+anchors_preset = 0
+offset_left = 157.0
+offset_top = -111.0
+offset_right = 377.0
+offset_bottom = -91.0
+mouse_filter = 2
+theme = ExtResource("20_365g4")
+script = ExtResource("22_radfe")
+offset_pixels = Vector2(70, -60)
+
+[node name="Pill" type="PanelContainer" parent="UI/InteractPrompt"]
+custom_minimum_size = Vector2(90, 20)
+layout_mode = 0
+offset_left = -21.0
+offset_top = 7.0
+offset_right = 64.0
+offset_bottom = 37.0
+theme = ExtResource("20_365g4")
+theme_override_styles/panel = SubResource("StyleBoxFlat_wfq73")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="UI/InteractPrompt/Pill"]
+layout_mode = 2
+theme = ExtResource("20_365g4")
+theme_override_constants/separation = 6
+
+[node name="Key" type="Label" parent="UI/InteractPrompt/Pill/HBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme = ExtResource("20_365g4")
+theme_override_colors/font_color = Color(0.20042, 0.746958, 0, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
+theme_override_font_sizes/font_size = 18
+text = "E"
+uppercase = true
+
+[node name="Text" type="Label" parent="UI/InteractPrompt/Pill/HBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme = ExtResource("20_365g4")
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
+theme_override_font_sizes/font_size = 16
+text = "Interagisci"
+
+[node name="DragLayer" type="CanvasLayer" parent="UI"]
+
+[node name="DragRoot" type="Node2D" parent="UI/DragLayer"]
 
 [node name="IntroLayer" type="CanvasLayer" parent="."]
 
@@ -24020,6 +23913,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
+offset_left = -353.0
+offset_top = -130.0
+offset_right = 363.0
+offset_bottom = 130.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("20_365g4")
@@ -24030,8 +23927,8 @@ layout_mode = 0
 offset_right = 40.0
 offset_bottom = 40.0
 theme = ExtResource("20_365g4")
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 14
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 14
 
@@ -24040,16 +23937,19 @@ layout_mode = 2
 theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="IntroLayer/IntroPanel/Margin/VBox"]
+texture_filter = 1
 layout_mode = 2
-theme_override_fonts/font = ExtResource("15_fpkok")
+theme_override_colors/font_color = Color(0.849173, 0.0017999, 0.989733, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_font_sizes/font_size = 26
 text = "Benvenuto al Centro Trasfusionale"
 
 [node name="Body" type="Label" parent="IntroLayer/IntroPanel/Margin/VBox"]
+texture_filter = 1
 layout_mode = 2
 theme = ExtResource("20_365g4")
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("16_fpkok")
+theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_font_sizes/font_size = 16
 text = "Oggi sei l’operatore di triage.
 
@@ -24066,6 +23966,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_nmquo")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
 theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")
@@ -24090,6 +23991,10 @@ anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
+offset_left = -175.0
+offset_top = -100.0
+offset_right = 274.0
+offset_bottom = 124.0
 grow_horizontal = 2
 grow_vertical = 2
 theme = ExtResource("20_365g4")
@@ -24111,15 +24016,16 @@ theme_override_constants/separation = 12
 [node name="Title" type="Label" parent="SummaryLayer/SummaryPanel/Margin/VBox"]
 layout_mode = 2
 theme = ExtResource("20_365g4")
-theme_override_fonts/font = ExtResource("15_fpkok")
+theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_font_sizes/font_size = 26
 text = "Benvenuto al Centro Trasfusionale"
 
 [node name="Body" type="Label" parent="SummaryLayer/SummaryPanel/Margin/VBox"]
+texture_filter = 1
 layout_mode = 2
 theme = ExtResource("20_365g4")
 theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("16_fpkok")
+theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_font_sizes/font_size = 16
 text = "Oggi sei l’operatore di triage.
 
@@ -24133,9 +24039,11 @@ autowrap_mode = 2
 layout_mode = 2
 
 [node name="Continue" type="Button" parent="SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow"]
+texture_filter = 1
 custom_minimum_size = Vector2(240, 44)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_styles/hover = SubResource("StyleBoxFlat_nmquo")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
 theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")

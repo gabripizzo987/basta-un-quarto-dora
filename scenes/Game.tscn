@@ -1,7 +1,9 @@
-[gd_scene load_steps=34 format=3 uid="uid://b4hmr3d0m4lhu"]
+[gd_scene load_steps=36 format=3 uid="uid://b4hmr3d0m4lhu"]
 
 [ext_resource type="Script" uid="uid://baf3jxln24c14" path="res://scenes/Game.gd" id="1_ibkli"]
+[ext_resource type="Theme" uid="uid://rlxur78jvedg" path="res://PixelTheme.tres" id="2_kiw3p"]
 [ext_resource type="FontFile" uid="uid://dq7fpp4xq1fid" path="res://fonts/Montserrat-MediumItalic.ttf" id="2_qbsmt"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="3_400sg"]
 [ext_resource type="Texture2D" uid="uid://bk5jewqoslqw6" path="res://assets/ui/book_middle (1).png" id="3_cpr0p"]
 [ext_resource type="Script" uid="uid://hy4h54fpsme6" path="res://scripts/PanelManual.gd" id="3_s0nni"]
 [ext_resource type="FontFile" uid="uid://cnn27dbe8yp6m" path="res://fonts/Inter_28pt-Regular.ttf" id="4_78awf"]
@@ -202,46 +204,58 @@ grow_vertical = 2
 script = ExtResource("1_ibkli")
 
 [node name="PanelAccept" type="Panel" parent="."]
-custom_minimum_size = Vector2(460, 340)
+clip_contents = true
+custom_minimum_size = Vector2(460, 0)
 layout_mode = 1
 anchors_preset = 11
 anchor_left = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -460.0
+offset_bottom = -360.0
 grow_horizontal = 0
 grow_vertical = 2
+theme = ExtResource("2_kiw3p")
 theme_override_styles/panel = SubResource("StyleBoxFlat_qbsmt")
 
 [node name="ContentVBox" type="VBoxContainer" parent="PanelAccept"]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_top = 13.0
+offset_bottom = 142.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 10
+theme = ExtResource("2_kiw3p")
+theme_override_constants/separation = 12
 
 [node name="LabelName" type="Label" parent="PanelAccept/ContentVBox"]
+texture_filter = 1
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_qbsmt")
+theme_override_fonts/font = ExtResource("3_400sg")
 theme_override_font_sizes/font_size = 22
 text = "Nome donatore"
+autowrap_mode = 2
 
 [node name="LabelInfo" type="Label" parent="PanelAccept/ContentVBox"]
+texture_filter = 1
 custom_minimum_size = Vector2(40, 0)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.901961, 0.901961, 0.901961, 1)
-theme_override_fonts/font = ExtResource("2_qbsmt")
-theme_override_font_sizes/font_size = 16
+theme_override_fonts/font = ExtResource("3_400sg")
 text = "Dati donatore...
 "
 autowrap_mode = 2
 
 [node name="LabelFeedback" type="Label" parent="PanelAccept/ContentVBox"]
+texture_filter = 1
 layout_mode = 2
-theme_override_fonts/font = ExtResource("2_qbsmt")
+size_flags_vertical = 3
+theme_override_fonts/font = ExtResource("3_400sg")
 text = "Feedback
 "
+autowrap_mode = 2
 
 [node name="ButtonsHBox" type="HBoxContainer" parent="PanelAccept/ContentVBox"]
 layout_mode = 2
@@ -249,6 +263,7 @@ theme_override_constants/separation = 14
 alignment = 1
 
 [node name="ButtonAccept" type="Button" parent="PanelAccept/ContentVBox/ButtonsHBox"]
+visible = false
 layout_mode = 2
 theme_override_styles/disabled = SubResource("StyleBoxFlat_78awf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_s0nni")
@@ -258,6 +273,7 @@ text = "Idoneo
 "
 
 [node name="ButtonReject" type="Button" parent="PanelAccept/ContentVBox/ButtonsHBox"]
+visible = false
 layout_mode = 2
 theme_override_styles/hover = SubResource("StyleBoxFlat_400sg")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_g4kob")
@@ -265,6 +281,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_qy1jj")
 text = "Non idoneo"
 
 [node name="ButtonManual" type="Button" parent="."]
+texture_filter = 1
 layout_mode = 1
 anchors_preset = 1
 anchor_left = 1.0
@@ -272,6 +289,7 @@ anchor_right = 1.0
 offset_left = -76.0
 offset_bottom = 31.0
 grow_horizontal = 0
+theme_override_fonts/font = ExtResource("3_400sg")
 theme_override_styles/hover = SubResource("StyleBoxFlat_vjgi4")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_kyk2p")
 theme_override_styles/normal = SubResource("StyleBoxFlat_45i86")
@@ -307,12 +325,12 @@ stretch_mode = 5
 
 [node name="LabelTitle" type="Label" parent="PanelManual"]
 layout_mode = 0
-offset_left = 238.0
+offset_left = 225.0
 offset_top = 72.0
-offset_right = 464.0
+offset_right = 551.0
 offset_bottom = 95.0
 theme_override_colors/font_color = Color(0.352558, 0.000149735, 0.382259, 1)
-theme_override_fonts/font = ExtResource("2_qbsmt")
+theme_override_fonts/font = ExtResource("3_400sg")
 text = "Manuale idoneità donatore"
 
 [node name="HBoxNav" type="HBoxContainer" parent="PanelManual"]
@@ -321,11 +339,13 @@ offset_left = 416.0
 offset_top = 10.0
 offset_right = 585.0
 offset_bottom = 50.0
+theme = ExtResource("2_kiw3p")
 
 [node name="ButtonPrev" type="Button" parent="PanelManual/HBoxNav"]
 custom_minimum_size = Vector2(40, 32)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_400sg")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_bneo8")
 theme_override_styles/hover = SubResource("StyleBoxFlat_3xj3m")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_mcffj")
@@ -337,12 +357,14 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.94902, 0.94902, 0.94902, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.501961)
 theme_override_colors/font_outline_color = Color(0.0214346, 0.0214346, 0.0214346, 1)
+theme_override_fonts/font = ExtResource("3_400sg")
 text = "Pagina 1/1"
 
 [node name="ButtonNext" type="Button" parent="PanelManual/HBoxNav"]
 custom_minimum_size = Vector2(40, 32)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("3_400sg")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_jbgew")
 theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_ocgqw")
 theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_a85ww")
@@ -757,6 +779,7 @@ offset_right = 20.0
 offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("2_kiw3p")
 theme_override_styles/panel = SubResource("StyleBoxFlat_cpr0p")
 
 [node name="Margin" type="MarginContainer" parent="ErrorPopup"]
@@ -776,12 +799,17 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="ErrorPopup/Margin/VBox"]
+texture_filter = 1
 layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_400sg")
 theme_override_font_sizes/font_size = 22
 text = "Errore"
 
 [node name="ErrorText" type="Label" parent="ErrorPopup/Margin/VBox"]
+texture_filter = 1
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_400sg")
 theme_override_font_sizes/font_size = 16
 autowrap_mode = 2
 
@@ -790,7 +818,9 @@ layout_mode = 2
 alignment = 1
 
 [node name="ButtonOk" type="Button" parent="ErrorPopup/Margin/VBox/ButtonsRow"]
+texture_filter = 1
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_400sg")
 text = "OK
 "
 

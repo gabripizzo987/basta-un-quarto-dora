@@ -2,6 +2,7 @@ extends Control
 
 signal all_donors_completed
 
+var triage_active := false
 var mistakes_total: int = 0
 var donors_missed_first_try: Array[int] = []  # slot_index dei donatori sbagliati almeno una volta
 
@@ -12,7 +13,7 @@ var current_player: Node = null
 var donors = []
 var current_donor_index = -1
 var decision_locked: bool = false
-
+var current_donor_node: Node2D = null
 
 @onready var button_accept: Button = $PanelAccept/ContentVBox/ButtonsHBox/ButtonAccept
 @onready var button_reject: Button = $PanelAccept/ContentVBox/ButtonsHBox/ButtonReject
@@ -82,8 +83,7 @@ var DRUGS = [
 	{"id": "paracetamol_recent","label": "Paracetamolo per febbre negli ultimi 2 giorni",    "deferral": "temp"},
 	{"id": "ibuprofen_recent",  "label": "Ibuprofene negli ultimi 2 giorni",                 "deferral": "temp"},
 	{"id": "antibiotic_recent", "label": "Antibiotico per infezione negli ultimi 5 giorni",  "deferral": "temp"},
-	{"id": "anticoagulant",     "label": "Terapia cronica con anticoagulanti orali",         "deferral": "perm"},
-	{"id": "aspirin_low",       "label": "Aspirina a basse dosi",                            "deferral": "none"}
+	{"id": "anticoagulant",     "label": "Terapia cronica con anticoagulanti orali",         "deferral": "perm"}
 ]
 
 
@@ -108,6 +108,7 @@ func _ready() -> void:
 
 # chiamata dall'esterno quando parli col donatore i
 func start_triage_for_slot(slot_index: int) -> void:
+	get_parent().get_node("TriageDragUI").visible = true
 	if slot_index < 0 or slot_index >= donors.size():
 		return
 
@@ -121,12 +122,21 @@ func start_triage_for_slot(slot_index: int) -> void:
 	panel_emocromo.visible = false
 	panel_manual.visible = false
 	panel_accept.visible = true
-
+	triage_active = true
+	_set_triage_active(true)
 	show_current_donor()
 
-func start_triage_for_slot_from_player(slot_index: int, player: Node) -> void:
+func start_triage_for_slot_from_player(slot_index: int, player: Node, donor_node: Node2D = null) -> void:
 	current_player = player
+	current_donor_node = donor_node
+	triage_active = true
+
+	var scene := get_tree().current_scene
+	if donor_node != null and scene != null and scene.has_method("show_drag_ui_for_donor"):
+		scene.show_drag_ui_for_donor(donor_node)
+
 	start_triage_for_slot(slot_index)
+
 	
 func _unlock_player() -> void:
 	if current_player == null:
@@ -148,11 +158,11 @@ func is_panel_open() -> bool:
 func close_panel_without_finishing() -> void:
 	# Chiude solo graficamente, non segna il donatore come fatto
 	panel_accept.visible = false
+	triage_active = false
 	panel_emocromo.visible = false
 	panel_manual.visible = false
 	_unlock_player()
-	# non tocchiamo donors_done né current_donor_index,
-	# così può riaprire e continuare
+	_set_triage_active(false)
 
 
 # ===== EMOCROMO =====
@@ -444,7 +454,9 @@ func _finish_current_donor() -> void:
 	decision_locked = false
 	_set_choice_buttons_enabled(true)
 	label_feedback.text = ""
-
+	_set_triage_active(false)
+	triage_active = false
+	current_donor_node = null
 	# chiudi pannelli
 	panel_accept.visible = false
 	panel_emocromo.visible = false
@@ -456,7 +468,8 @@ func _finish_current_donor() -> void:
 
 	if _all_donors_done():
 		emit_signal("all_donors_completed")
-
+	get_parent().get_node("TriageDragUI").visible = false
+	
 func _all_donors_done() -> bool:
 	for done in donors_done:
 		if not done:
@@ -464,21 +477,19 @@ func _all_donors_done() -> bool:
 	return true
 
 
-# -------------------------------
-# GESTIONE SCELTA UTENTE
-# -------------------------------
+func handle_choice(accepted: bool) -> bool:
+	print("CHOICE:", accepted, " donor=", current_donor_index)
 
-func handle_choice(accepted: bool) -> void:
 	# Se popup errore aperto, ignora input
 	if error_popup.visible:
-		return
+		return false
 
 	# Se stiamo già gestendo una scelta (timer in corso), ignora
 	if decision_locked:
-		return
+		return false
 
 	if current_donor_index < 0 or current_donor_index >= donors.size():
-		return
+		return false
 
 	# BLOCCA subito
 	decision_locked = true
@@ -488,7 +499,7 @@ func handle_choice(accepted: bool) -> void:
 	var eligible = is_donor_eligible(donor)
 
 	if accepted == eligible:
-		# Scelta corretta
+		# ✅ CORRETTO
 		if eligible:
 			label_feedback.text = "Corretto: %s è idoneo alla donazione.\nPasserà alla fase successiva." % donor["name"]
 
@@ -497,33 +508,31 @@ func handle_choice(accepted: bool) -> void:
 
 			await get_tree().create_timer(1.5).timeout
 			_finish_current_donor()
-			return
+			return true
 		else:
 			label_feedback.text = "Corretto: %s non è idoneo." % donor["name"]
 
 			await get_tree().create_timer(1.5).timeout
 			_finish_current_donor()
-			return
+			return true
 
-	else:
-		# ❌ SCELTA SBAGLIATA → QUI REGISTRIAMO L'ERRORE
-		mistakes_total += 1
+	# ❌ SBAGLIATO
+	mistakes_total += 1
 
-		if not donors_missed_first_try.has(current_donor_index):
-			donors_missed_first_try.append(current_donor_index)
+	if not donors_missed_first_try.has(current_donor_index):
+		donors_missed_first_try.append(current_donor_index)
 
-		if eligible and not accepted:
-			label_feedback.text = "Errore: %s era idoneo." % donor["name"]
-			show_error_popup("Il donatore rispettava i criteri minimi di idoneità: dovevi ACCETTARE.")
-		elif not eligible and accepted:
-			label_feedback.text = "Errore: %s non è idoneo." % donor["name"]
-			show_error_popup(get_ineligibility_reason(donor))
+	if eligible and not accepted:
+		label_feedback.text = "Errore: %s era idoneo." % donor["name"]
+		show_error_popup("Il donatore rispettava i criteri minimi di idoneità: dovevi ACCETTARE.")
+	elif not eligible and accepted:
+		label_feedback.text = "Errore: %s non è idoneo." % donor["name"]
+		show_error_popup(get_ineligibility_reason(donor))
 
-		# SBLOCCA: può riprovare
-		decision_locked = false
-		_set_choice_buttons_enabled(true)
-
-		
+	# SBLOCCA: può riprovare
+	decision_locked = false
+	_set_choice_buttons_enabled(true)
+	return false
 
 
 func _on_ButtonManual_pressed() -> void:
@@ -604,6 +613,12 @@ func show_error_popup(reason: String) -> void:
 	error_popup.visible = true
 	error_text.text = "Motivo:\n%s" % reason
 
+	var ok_btn := error_popup.get_node("Margin/VBox/ButtonsRow/ButtonOk") as Button
+	if ok_btn:
+		ok_btn.disabled = false
+		ok_btn.mouse_filter = Control.MOUSE_FILTER_STOP
+		ok_btn.focus_mode = Control.FOCUS_ALL
+		ok_btn.grab_focus()
 
 func open_for_donor_index(index: int, player: Node) -> void:
 	current_player = player
@@ -620,3 +635,23 @@ func close_panel() -> void:
 func _set_choice_buttons_enabled(enabled: bool) -> void:
 	button_accept.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
 	button_reject.mouse_filter = Control.MOUSE_FILTER_STOP if enabled else Control.MOUSE_FILTER_IGNORE
+	
+func is_decision_locked() -> bool:
+	return decision_locked
+	
+func on_drag_drop_choice(accepted: bool) -> void:
+	# chiamata da DonorDragCard → TriageDragUI → qui
+	handle_choice(accepted)
+
+
+func is_triage_active() -> bool:
+	return triage_active
+
+func _set_triage_active(v: bool) -> void:
+	triage_active = v
+
+func get_current_donor_node() -> Node2D:
+	return current_donor_node
+	
+func is_error_popup_open() -> bool:
+	return error_popup.visible

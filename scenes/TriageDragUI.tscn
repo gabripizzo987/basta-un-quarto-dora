@@ -1,0 +1,181 @@
+[gd_scene load_steps=8 format=3 uid="uid://dy0rm6todo3qy"]
+
+[ext_resource type="Script" uid="uid://c2ut1yfbobu3t" path="res://scripts/TriageDragUI.gd" id="1_24it3"]
+[ext_resource type="Script" uid="uid://dybf3gx7g8ng0" path="res://scripts/DonorDragCard.gd" id="2_s5xmm"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="3_5c7p2"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5c7p2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5c7p2"]
+bg_color = Color(0.0352941, 0, 0.45098, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.0676667, 3.85046e-07, 0.63327, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_na80y"]
+bg_color = Color(0.0369403, 0, 0.452181, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.0666667, 0, 0.631373, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_offset = Vector2(2, 2)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yty3l"]
+bg_color = Color(0.365, 0, 1, 0)
+
+[node name="TriageDragUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_24it3")
+
+[node name="Root" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -641.0
+offset_top = -361.0
+offset_right = 148.0
+offset_bottom = 357.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxEmpty_5c7p2")
+
+[node name="DonorDragCard" type="Panel" parent="Root"]
+visible = false
+custom_minimum_size = Vector2(360, 140)
+layout_mode = 1
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("2_s5xmm")
+
+[node name="Icon" type="TextureRect" parent="Root/DonorDragCard"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="VBox" type="VBoxContainer" parent="Root/DonorDragCard"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+mouse_filter = 2
+
+[node name="DropRow" type="HBoxContainer" parent="Root"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -141.0
+offset_right = 16.0
+offset_bottom = -1.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_constants/separation = 24
+
+[node name="DropNonIdoneo" type="Panel" parent="Root/DropRow"]
+modulate = Color(1, 1, 1, 0.85)
+custom_minimum_size = Vector2(320, 140)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5c7p2")
+
+[node name="CenterContainer" type="CenterContainer" parent="Root/DropRow/DropNonIdoneo"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -105.5
+offset_top = -20.0
+offset_right = 105.5
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Root/DropRow/DropNonIdoneo/CenterContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0, 0, 1)
+theme_override_fonts/font = ExtResource("3_5c7p2")
+theme_override_font_sizes/font_size = 26
+text = "NON IDONEO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DropIdoneo" type="Panel" parent="Root/DropRow"]
+modulate = Color(1, 1, 1, 0.85)
+custom_minimum_size = Vector2(320, 140)
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_na80y")
+
+[node name="CenterContainer" type="CenterContainer" parent="Root/DropRow/DropIdoneo"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -65.0
+offset_top = -20.0
+offset_right = 65.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Label" type="Label" parent="Root/DropRow/DropIdoneo/CenterContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("3_5c7p2")
+theme_override_font_sizes/font_size = 26
+text = "IDONEO"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="HintBar" type="PanelContainer" parent="Root"]
+texture_filter = 1
+custom_minimum_size = Vector2(56, 51)
+layout_mode = 1
+offset_left = -104.0
+offset_top = 2.0
+offset_right = 774.0
+offset_bottom = 53.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_yty3l")
+
+[node name="MarginContainer" type="MarginContainer" parent="Root/HintBar"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/HintBar/MarginContainer"]
+texture_filter = 1
+custom_minimum_size = Vector2(21, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.888942, 0.901127, 0.999998, 1)
+theme_override_fonts/font = ExtResource("3_5c7p2")
+text = "Trascina il donatore: tieni premuto CLICK SINISTRO e rilascialo su IDONEO / NON IDONEO."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2

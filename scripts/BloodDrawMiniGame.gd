@@ -11,27 +11,31 @@ signal done(result: String) # "success" | "borderline" | "fail"
 @onready var zone: ColorRect = $Frame/Margin/VBox/PlayField/VeinZone
 @onready var needle: TextureRect = $Frame/Margin/VBox/PlayField/Needle
 @onready var elbow: Marker2D = $Frame/Margin/VBox/PlayField/Arm/ElbowMarker
+@onready var margin: MarginContainer = $Frame/Margin
 
 var active: bool = false
-var speed: float = 260.0
+var speed: float = 280.0
 var dir: int = 1
 var needle_y: float = 0.0
 var fixed_x: float = 0.0
 
-const TOP_PADDING: float = -20.0
+const TOP_PADDING: float = -200.0
 const BOTTOM_PADDING: float = -175.0
 const BORDERLINE_MARGIN: float = 18.0
 const TIP_MARGIN_BOTTOM: float = 6.0
 const ELBOW_JITTER_Y: float = 6.0
 const ELBOW_JITTER_X: float = 0.0
 
-const OSC_UP: float = 120.0
+const TEXT_PAD_X := 4
+const TEXT_PAD_Y := 4
+const TITLE_COLOR := Color("#7EC8E3")  
+
+const OSC_UP: float = 150.0
 const OSC_DOWN: float = 600.0
 
 const ZONE_X_OFFSET: float = 35.0
 const NEEDLE_X_OFFSET: float = 10.0
 
-# Se la punta non coincide PERFETTAMENTE, ritocca SOLO questo numero (pixel in alto/basso).
 const NEEDLE_TIP_OFFSET_Y: float = 61.0
 
 func _ready() -> void:
@@ -47,6 +51,12 @@ func start() -> void:
 
 	title.text = "Prelievo - Inserimento ago"
 	hint.text = "Premi E quando la punta dell'ago e' nella VENA"
+	
+	margin.add_theme_constant_override("margin_left",  TEXT_PAD_X)
+	margin.add_theme_constant_override("margin_top",   TEXT_PAD_Y)
+
+	title.add_theme_color_override("font_color", TITLE_COLOR)
+
 
 	playfield.clip_contents = false
 	frame.clip_contents = false
@@ -130,7 +140,7 @@ func _place_zone_on_elbow() -> void:
 
 	zone.position = elbow_pf - zone.size * 0.5
 
-# Usato solo per posizionare l'ago all'inizio (allineando la punta al centro zona)
+
 func _tip_local_for_alignment() -> Vector2:
 	return Vector2(
 		needle.size.x * 0.5,

@@ -5,4 +5,4 @@ func _on_Button_pressed() -> void:
 
 
 func _on_inizia_pressed() -> void:
-	pass # Replace with function body.
+	pass 
