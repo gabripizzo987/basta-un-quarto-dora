@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://5op7emasoov4"]
+[gd_scene load_steps=6 format=3 uid="uid://5op7emasoov4"]
 
 [ext_resource type="Texture2D" uid="uid://brcyax1pnel5y" path="res://assets/backgrounds/Spritesheets/ChatGPT Image 18 gen 2026, 13_53_45 (1).png" id="1_e8jcs"]
 [ext_resource type="Script" uid="uid://dxv56uhpp51ey" path="res://scripts/BloodDrawMiniGame.gd" id="1_heeqe"]
 [ext_resource type="Texture2D" uid="uid://n1ajp3q30qje" path="res://assets/backgrounds/Spritesheets/ChatGPT Image 18 gen 2026, 14_13_05.png" id="2_heeqe"]
 [ext_resource type="Theme" uid="uid://rlxur78jvedg" path="res://PixelTheme.tres" id="2_nuyn8"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="3_ij6qp"]
 
 [node name="BloodDrawMiniGame" type="Control"]
 layout_mode = 3
@@ -34,9 +35,11 @@ theme = ExtResource("2_nuyn8")
 
 [node name="Title" type="Label" parent="Frame/Margin/VBox"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ij6qp")
 
 [node name="Hint" type="Label" parent="Frame/Margin/VBox"]
 layout_mode = 2
+theme_override_fonts/font = ExtResource("3_ij6qp")
 
 [node name="PlayField" type="Control" parent="Frame/Margin/VBox"]
 custom_minimum_size = Vector2(520, 360)

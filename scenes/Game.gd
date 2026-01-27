@@ -39,10 +39,6 @@ var current_donor_node: Node2D = null
 @onready var button_wait = $PanelEmocromo/ButtonWait
 @onready var button_proceed = $PanelEmocromo/ButtonProceedDonation
 
-# ------------------------
-# CONFIG NOMI / SESSO FISSI PER I 5 DONATORI
-# indice 0 -> donatore seduto 1, indice 1 -> donatore 2, ecc.
-# ------------------------
 var SLOT_CONFIG = [
 	{"name": "Gabriele", "sex": "M"},   # Donor1
 	{"name": "Claudio",     "sex": "M"},   # Donor2
@@ -54,10 +50,7 @@ var SLOT_CONFIG = [
 # quali donatori sono già stati gestiti (accettati+emocromo o rifiutati)
 var donors_done = []
 
-# ------------------------
-# VARIABILI DI STATO
-# ------------------------
-var phase = "accept"  # "accept" oppure "emocromo"
+var phase = "accept"  
 
 var current_bp_sys = 0
 var current_bp_dia = 0
@@ -103,8 +96,6 @@ func _ready() -> void:
 
 	error_popup.visible = false
 	error_ok.pressed.connect(Callable(self, "_on_error_ok_pressed"))
-
-# ===== API usata da AcceptanceRoom / DonorArea =====
 
 # chiamata dall'esterno quando parli col donatore i
 func start_triage_for_slot(slot_index: int) -> void:
@@ -165,7 +156,7 @@ func close_panel_without_finishing() -> void:
 	_set_triage_active(false)
 
 
-# ===== EMOCROMO =====
+# EMOCROMO (inutilizzato)
 
 func start_emocromo_for_current_donor() -> void:
 	phase = "emocromo"
@@ -208,10 +199,7 @@ func update_emocromo_ui() -> void:
 		else:
 			label_bp_info.text = "Pressione alta: meglio attendere e rivalutare prima di donare."
 
-# -------------------------------
 # GENERAZIONE DONATORI
-# -------------------------------
-
 func generate_donors(count: int, min_eligible: int) -> void:
 	donors.clear()
 
@@ -222,7 +210,6 @@ func generate_donors(count: int, min_eligible: int) -> void:
 	# scegli quanti saranno idonei (tra min_eligible e real_count)
 	var target_eligible = rng.randi_range(min_eligible, real_count)
 
-	# lista di flag tipo [true, true, true, false, false] e mischiala
 	var flags = []
 	for i in range(real_count):
 		flags.append(i < target_eligible)
@@ -234,7 +221,6 @@ func generate_donors(count: int, min_eligible: int) -> void:
 
 		var donor = generate_random_donor(must_be_eligible, slot_cfg)
 
-		# se deve essere idoneo, assicurati che lo sia
 		if must_be_eligible:
 			while not is_donor_eligible(donor):
 				donor = generate_random_donor(true, slot_cfg)
@@ -334,11 +320,7 @@ func generate_random_donor(must_be_eligible: bool, slot_cfg: Dictionary) -> Dict
 		"last_donation_months_ago": last_donation_months_ago
 	}
 
-
-# -------------------------------
 # MOSTRARE I DATI A SCHERMO
-# -------------------------------
-
 func show_current_donor() -> void:
 	if current_donor_index < 0 or current_donor_index >= donors.size():
 		return
@@ -375,12 +357,8 @@ func show_current_donor() -> void:
 	]
 
 	label_feedback.text = ""
-
-
-# -------------------------------
+	
 # LOGICA DI IDONEITÀ
-# -------------------------------
-
 func is_donor_eligible(donor: Dictionary) -> bool:
 	if donor["age"] < 18:
 		return false
@@ -438,11 +416,7 @@ func get_ineligibility_reason(donor: Dictionary) -> String:
 
 	return "Non idoneo per motivi clinici (semplificati)."
 
-
-# -------------------------------
 # FINE TRIAGE DI UN DONATORE
-# -------------------------------
-
 func _finish_current_donor() -> void:
 	if current_donor_index < 0 or current_donor_index >= donors_done.size():
 		return
@@ -450,7 +424,6 @@ func _finish_current_donor() -> void:
 	# segna fatto
 	donors_done[current_donor_index] = true
 
-	# RESET LOCK + BOTTONI (FONDAMENTALE)
 	decision_locked = false
 	_set_choice_buttons_enabled(true)
 	label_feedback.text = ""
@@ -484,7 +457,6 @@ func handle_choice(accepted: bool) -> bool:
 	if error_popup.visible:
 		return false
 
-	# Se stiamo già gestendo una scelta (timer in corso), ignora
 	if decision_locked:
 		return false
 
@@ -499,7 +471,7 @@ func handle_choice(accepted: bool) -> bool:
 	var eligible = is_donor_eligible(donor)
 
 	if accepted == eligible:
-		# ✅ CORRETTO
+		# CORRETTO
 		if eligible:
 			label_feedback.text = "Corretto: %s è idoneo alla donazione.\nPasserà alla fase successiva." % donor["name"]
 
@@ -516,7 +488,7 @@ func handle_choice(accepted: bool) -> bool:
 			_finish_current_donor()
 			return true
 
-	# ❌ SBAGLIATO
+	# SBAGLIATO
 	mistakes_total += 1
 
 	if not donors_missed_first_try.has(current_donor_index):
@@ -546,7 +518,7 @@ func _on_ButtonCloseManual_pressed() -> void:
 func _on_ButtonCoffee_pressed() -> void:
 	if phase != "emocromo":
 		return
-	# Il caffè fa salire un po' la pressione
+
 	current_bp_sys += 5
 	current_bp_dia += 3
 	label_feedback_emo.text = "Hai somministrato caffè zuccherato."

@@ -360,6 +360,7 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_y5y3l")
 text = "▶"
 
 [node name="PagesRow" type="HBoxContainer" parent="PanelManual"]
+visible = false
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 1
 anchors_preset = 15
@@ -412,7 +413,6 @@ Donne: ≥ 12,5 g/dL
 • nella norma → ✔ passi agli altri controlli"
 
 [node name="PagesRow2" type="HBoxContainer" parent="PanelManual"]
-visible = false
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 1
 anchors_preset = 15
@@ -434,7 +434,7 @@ theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
 theme_override_fonts/normal_font = ExtResource("5_fvrux")
 theme_override_font_sizes/normal_font_size = 16
 bbcode_enabled = true
-text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Globuli Bianchi[/font][/color]
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Globuli Bianchi(WBC)[/font][/color]
 
 I globuli bianchi indicano lo stato generale di salute del donatore.
 
@@ -452,7 +452,7 @@ theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
 theme_override_fonts/normal_font = ExtResource("5_fvrux")
 theme_override_font_sizes/normal_font_size = 16
 bbcode_enabled = true
-text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Piastrine[/font][/color]
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]Piastrine (PLT)[/font][/color]
 
 Le piastrine sono fondamentali
 per la coagulazione del sangue.

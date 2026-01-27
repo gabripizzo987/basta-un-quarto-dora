@@ -3402,7 +3402,9 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_ajyvp")
 text = "▶ Continua"
 
 [node name="Body" type="RichTextLabel" parent="UI/PressurePanel/Margin/Root"]
+texture_filter = 1
 layout_mode = 2
+theme_override_fonts/normal_font = ExtResource("5_b00t5")
 
 [node name="ButtonsRow" type="HBoxContainer" parent="UI/PressurePanel/Margin/Root"]
 layout_mode = 2
