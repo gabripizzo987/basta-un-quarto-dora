@@ -39,6 +39,7 @@ func setup(_triage_logic: Node, _drop_idoneo: Control, _drop_non: Control, _drag
 	drop_non = _drop_non
 	drag_root = _drag_root
 	_dbg("setup OK triage_logic=%s drop_id=%s drop_non=%s drag_root=%s" % [triage_logic, drop_idoneo, drop_non, drag_root])
+	
 
 func start_for_donor(donor_node: Node2D) -> void:
 	donor = donor_node
@@ -298,3 +299,11 @@ func _mark_donor_done() -> void:
 func _dbg(msg: String) -> void:
 	if debug_logs:
 		print("[TriageDragUI] ", msg)
+	
+func _on_error_popup_opened() -> void:
+	# lascia passare i click al popup
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+func _on_error_popup_closed() -> void:
+	# torna normale per droppare
+	mouse_filter = Control.MOUSE_FILTER_STOP

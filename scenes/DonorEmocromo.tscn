@@ -1,0 +1,198 @@
+[gd_scene load_steps=25 format=3 uid="uid://31yxwwykkanu"]
+
+[ext_resource type="Script" uid="uid://bynrvsidn17pm" path="res://scripts/Daniele.gd" id="1_tl22u"]
+[ext_resource type="Texture2D" uid="uid://ptf460j8i5w0" path="res://assets/characters/character-spritesheet.png" id="2_a2jxt"]
+[ext_resource type="Texture2D" uid="uid://d4bfri4vokiee" path="res://assets/characters/character-spritesheet (5).png" id="2_ted47"]
+[ext_resource type="Texture2D" uid="uid://ckmwonq3ch52g" path="res://assets/characters/character-spritesheet (3).png" id="3_ijmr3"]
+[ext_resource type="Script" uid="uid://f3vg477axsok" path="res://scripts/DonorArea.gd" id="3_xi5m0"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="4_yupa4"]
+[ext_resource type="Texture2D" uid="uid://c6ik3t7hoqyel" path="res://assets/backgrounds/Spritesheets/Sfignomametro.png" id="5_a2jxt"]
+[ext_resource type="Texture2D" uid="uid://dfno5g3n33sgt" path="res://assets/characters/character-spritesheet (6).png" id="5_th4us"]
+[ext_resource type="Texture2D" uid="uid://onhji678qw0m" path="res://assets/characters/character-spritesheet (7).png" id="6_nmy7o"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_utgmt"]
+atlas = ExtResource("2_a2jxt")
+region = Rect2(128, 2048, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_bd8ow"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_utgmt")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_4k1ik"]
+atlas = ExtResource("3_ijmr3")
+region = Rect2(128, 2048, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_hugs4"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_4k1ik")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_6fgcm"]
+atlas = ExtResource("2_ted47")
+region = Rect2(128, 2048, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_xdgr8"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_6fgcm")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_bc3jk"]
+atlas = ExtResource("5_th4us")
+region = Rect2(128, 2048, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_f8ngl"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_bc3jk")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nr21q"]
+atlas = ExtResource("6_nmy7o")
+region = Rect2(128, 2048, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_4fmvv"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nr21q")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_sh6iu"]
+atlas = ExtResource("2_ted47")
+region = Rect2(128, 2048, 64, 64)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ajyvp"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_sh6iu")
+}],
+"loop": true,
+"name": &"default",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ej7jk"]
+size = Vector2(6, 20)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sipi1"]
+content_margin_left = 8.0
+content_margin_top = 4.0
+content_margin_right = 8.0
+content_margin_bottom = 4.0
+bg_color = Color(0.0666667, 0.0941176, 0.152941, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.176471, 0.215686, 0.282353, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c1vtc"]
+size = Vector2(20, 2)
+
+[node name="Daniele" type="CharacterBody2D"]
+texture_filter = 1
+script = ExtResource("1_tl22u")
+frames_0 = SubResource("SpriteFrames_bd8ow")
+frames_1 = SubResource("SpriteFrames_hugs4")
+frames_2 = SubResource("SpriteFrames_xdgr8")
+frames_3 = SubResource("SpriteFrames_f8ngl")
+frames_4 = SubResource("SpriteFrames_4fmvv")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+sprite_frames = SubResource("SpriteFrames_ajyvp")
+
+[node name="Area2D" type="Area2D" parent="."]
+script = ExtResource("3_xi5m0")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+position = Vector2(0, -14)
+shape = SubResource("RectangleShape2D_ej7jk")
+
+[node name="InteractPrompt" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 0
+offset_left = -23.0
+offset_top = -64.0
+offset_right = -23.0
+offset_bottom = -64.0
+mouse_filter = 2
+
+[node name="Pill" type="PanelContainer" parent="InteractPrompt"]
+layout_mode = 0
+offset_left = -21.0
+offset_top = 7.0
+offset_right = 64.0
+offset_bottom = 37.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_sipi1")
+
+[node name="HBoxContainer" type="HBoxContainer" parent="InteractPrompt/Pill"]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Key" type="Label" parent="InteractPrompt/Pill/HBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_fonts/font = ExtResource("4_yupa4")
+theme_override_font_sizes/font_size = 14
+text = "E"
+uppercase = true
+
+[node name="Text" type="Label" parent="InteractPrompt/Pill/HBoxContainer"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("4_yupa4")
+theme_override_font_sizes/font_size = 12
+text = "Interagisci"
+
+[node name="Collisione" type="CollisionShape2D" parent="."]
+z_index = 2
+position = Vector2(0, -8)
+shape = SubResource("RectangleShape2D_c1vtc")
+
+[node name="Props" type="Node2D" parent="."]
+
+[node name="Sfigmo" type="Sprite2D" parent="Props"]
+visible = false
+z_index = 6
+texture_filter = 1
+position = Vector2(16, 8)
+scale = Vector2(0.026, 0.026)
+texture = ExtResource("5_a2jxt")
+
+[connection signal="body_entered" from="Area2D" to="." method="_on_area_2d_body_entered"]
+[connection signal="body_exited" from="Area2D" to="." method="_on_area_2d_body_exited"]

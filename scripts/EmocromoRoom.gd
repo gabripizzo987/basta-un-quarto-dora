@@ -1,17 +1,23 @@
 extends Node2D
 
+@export var donor_scene: PackedScene
 @onready var dim: ColorRect = $IntroLayer/Dim
 @onready var intro_panel: Control = $IntroLayer/IntroPanel
 @onready var player: Node = $Nurse
 @onready var pressure_panel: Panel = $UI/PressurePanel
-@onready var sfigmo: Sprite2D = $Daniele/Props/Sfigmo
 @onready var nurse_anim: AnimatedSprite2D = $Nurse/AnimatedSprite2D
 @onready var overlay: Control = $UI/PressureOverlay
 @onready var overlay_img: TextureRect = $UI/PressureOverlay/SfigmoBig
 @onready var blood_minigame: Control = $UI/BloodDrawMiniGame
 @onready var edta_icon: TextureRect = $UI/EDTATubeIcon
 @onready var analyzer_machine: Area2D = $AnalyzerMachine/InteractArea
-
+@onready var seat_markers: Array[Marker2D] = [
+	$SeatMarker1,
+	$SeatMarker2,
+	$SeatMarker3,
+	$SeatMarker4,
+	$SeatMarker5
+]
 
 var emocromo_errors: Array[Dictionary] = []
 var machine_busy: bool = false
@@ -31,6 +37,15 @@ var analysis_done: bool = false
 var donor_busy: bool = false
 var donor_done: bool = false
 var decision_lock: bool = false
+var completed_donor_ids: Array[int] = []
+var current_donor_node: Node = null
+var spawned_donors: Array[Node] = []
+
+@export var MIN_ELIGIBLE_TO_FINAL: int = 3
+@export var MAX_ELIGIBLE_TO_FINAL: int = 5
+
+var forced_eligible_ids: Array[int] = []
+var rng := RandomNumberGenerator.new()
 
 
 func _ready() -> void:
@@ -49,7 +64,15 @@ func _ready() -> void:
 	if edta_icon:
 		edta_icon.visible = false
 	print("PLAYER layer/mask: ", $Nurse.collision_layer, " / ", $Nurse.collision_mask)
-
+	spawn_donors_on_seats()
+	_pick_forced_eligible_ids()
+	rng.randomize()
+	print("FORCED ELIGIBLE IDS:", forced_eligible_ids)
+	
+	print("SUMMARY TITLE:", $SummaryLayer/SummaryPanel/Margin/VBox/Title)
+	print("SUMMARY BODY:", $SummaryLayer/SummaryPanel/Margin/VBox/Body)
+	print("SUMMARY BTN:", $SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue)
+	
 func _on_intro_pressed() -> void:
 	dim.hide()
 	intro_panel.hide()
@@ -59,7 +82,9 @@ func _on_intro_pressed() -> void:
 	show_feedback("Avvicinati al donatore e premi E per iniziare.")
 
 func start_emocromo_for(d: Dictionary) -> void:
-	if donor_done:
+	var id := int(d.get("id", -1))
+
+	if id != -1 and completed_donor_ids.has(id):
 		show_feedback("Hai già raccolto il campione da questo donatore.")
 		return
 
@@ -69,6 +94,7 @@ func start_emocromo_for(d: Dictionary) -> void:
 
 	donor_busy = true
 	donor = d.duplicate(true)
+	_lock_other_donors(true)
 	show_feedback("Donatore: %s (%s)" % [donor["name"], donor["sex"]])
 	player.set_can_move(false)
 	start_pressure_phase()
@@ -93,12 +119,10 @@ func start_pressure_phase() -> void:
 		nurse_anim.play("idle_up")
 
 	show_sfigmo()
-	show_pressure_overlay()
 
 	await get_tree().create_timer(1.5).timeout
 
 	hide_sfigmo()
-	hide_pressure_overlay()
 	if nurse_anim:
 		nurse_anim.play("idle_up")
 
@@ -125,12 +149,18 @@ func start_analysis_phase() -> void:
 	open_results_ui()
 
 func generate_results() -> void:
-	results = {
-		"hb": snappedf(randf_range(11.0, 16.0), 0.1),
-		"wbc": snappedf(randf_range(3.0, 13.0), 0.1),
-		"plt": randi_range(120, 450)
-	}
-	print("RISULTATI:", results)
+	var id := int(donor.get("id", -1))
+
+	if id != -1 and forced_eligible_ids.has(id):
+		results = _generate_eligible_results_for(str(donor.get("sex", "M")))
+	else:
+		results = {
+			"hb": snappedf(randf_range(11.0, 16.0), 0.1),
+			"wbc": snappedf(randf_range(3.0, 13.0), 0.1),
+			"plt": randi_range(120, 450)
+		}
+
+	print("RISULTATI:", results, " | donor_id=", id, " forced=", (id != -1 and forced_eligible_ids.has(id)))
 
 func evaluate_results() -> void:
 	var eligible = is_eligible(donor["sex"], results)
@@ -187,14 +217,23 @@ func end_flow() -> void:
 	pressure_attempts = 0
 
 	donor_busy = false
-	donor_done = true
+
+	var id := int(donor.get("id", -1))
+	if id != -1 and not completed_donor_ids.has(id):
+		completed_donor_ids.append(id)
 
 	has_blood_sample = false
 	analysis_done = true
 
-	if analyzer_machine:
-		analyzer_machine.set_enabled(false)
+	if current_donor_node and is_instance_valid(current_donor_node) and current_donor_node.has_method("set_done"):
+		current_donor_node.set_done(true)
 
+	if completed_donor_ids.size() >= spawned_donors.size():
+		_show_room_summary()
+		return  
+
+	_lock_other_donors(false)
+	current_donor_node = null
 
 func _on_button_pressed() -> void:
 	var eligible := is_eligible(donor["sex"], results)
@@ -218,25 +257,26 @@ func _on_button_2_pressed() -> void:
 	end_flow()
 	
 func generate_pressure_base() -> int:
+	# ✅ Donatore "forced" -> pressione sempre OK
+	if _is_forced_donor():
+		return rng.randi_range(118, 136)  # dentro 110–140, sicuro
+
+	# --- tua logica random originale ---
 	var roll = randi() % 100
 	if roll < 70:
-		return randi_range(110, 140)      # ok
+		return randi_range(110, 140)
 	elif roll < 90:
-		# borderline
 		if randi() % 2 == 0:
 			return randi_range(100, 109)
 		return randi_range(141, 160)
 	else:
-		# fail
 		if randi() % 2 == 0:
 			return randi_range(80, 99)
 		return randi_range(161, 190)
 
 func _classify_pressure(sys: int) -> String:
-	# ok: 110–140
 	if sys >= 110 and sys <= 140:
 		return "ok"
-	# borderline: 100–109 o 141–160
 	if (sys >= 100 and sys <= 109) or (sys >= 141 and sys <= 160):
 		return "borderline"
 	return "fail"
@@ -288,7 +328,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 	if player_near_machine and has_blood_sample and not analysis_done:
 		if analyzer_machine:
-			analyzer_machine.try_interact(player)  # emette interacted -> _on_machine_interacted -> start_machine_insertion()
+			analyzer_machine.try_interact(player) 
 		return
 
 	pass
@@ -319,7 +359,6 @@ func show_decision_buttons() -> void:
 func _on_decision_accept() -> void:
 	var eligible := is_eligible(donor["sex"], results)
 
-	# ✅ SCELTA CORRETTA -> POPUP + OK -> end_flow()
 	if eligible:
 		panel_continue(
 			"Esito decisione",
@@ -328,7 +367,6 @@ func _on_decision_accept() -> void:
 		)
 		return
 
-	# ❌ SCELTA SBAGLIATA -> LASCIA LA TUA LOGICA ATTUALE
 	var reasons := compute_ineligibility_reasons(donor["sex"], results)
 	_record_emocromo_error("accept", reasons)
 
@@ -339,7 +377,6 @@ func _on_decision_accept() -> void:
 func _on_decision_reject() -> void:
 	var eligible := is_eligible(donor["sex"], results)
 
-	# ✅ SCELTA CORRETTA -> POPUP + OK -> end_flow()
 	if not eligible:
 		var reasons := compute_ineligibility_reasons(donor["sex"], results)
 		panel_continue(
@@ -349,7 +386,6 @@ func _on_decision_reject() -> void:
 		)
 		return
 
-	# ❌ SCELTA SBAGLIATA -> LASCIA LA TUA LOGICA ATTUALE
 	var reasons_ok: Array[String] = ["Valori nei range: Hb/WBC/PLT idonei."]
 	_record_emocromo_error("reject", reasons_ok)
 
@@ -362,33 +398,47 @@ func panel_continue(title: String, body: String, on_continue: Callable) -> void:
 	pressure_panel.show_continue(title, body)
 	
 func show_sfigmo() -> void:
-	if sfigmo == null:
+	if overlay == null or overlay_img == null:
 		return
 
-	var base := Vector2(0.28, 0.28) 
-	sfigmo.visible = true
-	sfigmo.modulate.a = 0.0
-	sfigmo.scale = base * 0.85
+	overlay.visible = true
+	overlay_img.visible = true
+	overlay_img.modulate.a = 0.0
 
-	var tw = create_tween()
-	tw.tween_property(sfigmo, "modulate:a", 1.0, 0.12)
-	tw.parallel().tween_property(sfigmo, "scale", base, 0.12)
+	await get_tree().process_frame
+	_center_sfigmo_big()
 
+	var tw := create_tween()
+	tw.tween_property(overlay_img, "modulate:a", 1.0, 0.12)
+	
 func hide_sfigmo() -> void:
-	var tw = create_tween()
-	tw.tween_property(sfigmo, "modulate:a", 0.0, 0.10)
+	if overlay == null or overlay_img == null:
+		return
+
+	var tw := create_tween()
+	tw.tween_property(overlay_img, "modulate:a", 0.0, 0.10)
 	tw.finished.connect(func():
-		sfigmo.visible = false
-		sfigmo.modulate.a = 1.0
+		if is_instance_valid(overlay):
+			overlay.visible = false
+		if is_instance_valid(overlay_img):
+			overlay_img.visible = false
+			overlay_img.modulate.a = 1.0
 	)
 	
 func show_pressure_overlay() -> void:
 	if overlay == null:
 		return
+
 	overlay.visible = true
 	overlay.modulate.a = 0.0
+
+	await get_tree().process_frame
+	_center_sfigmo_big()
+
 	var tw = create_tween()
 	tw.tween_property(overlay, "modulate:a", 1.0, 0.12)
+
+
 
 func hide_pressure_overlay() -> void:
 	if overlay == null:
@@ -401,8 +451,11 @@ func hide_pressure_overlay() -> void:
 	)
 
 func _on_blood_minigame_done(result: String) -> void:
+	if pressure_panel:
+		pressure_panel.hide_panel()
+
 	match result:
-		"success", "borderline":
+		"success":
 			has_blood_sample = true
 			analysis_done = false
 
@@ -441,7 +494,8 @@ func _on_blood_minigame_done(result: String) -> void:
 					player.set_can_move(true)
 			)
 
-		"fail":
+		"borderline", "fail":
+			# ✅ ORA borderline è trattato come fallimento: deve riprovare
 			has_blood_sample = false
 			analysis_done = false
 
@@ -456,6 +510,15 @@ func _on_blood_minigame_done(result: String) -> void:
 				"❌ Prelievo non valido.\nRiprova con più calma.",
 				func(): start_blood_draw_phase()
 			)
+
+		_:
+			# safety: se arriva un valore strano, lo consideriamo fallito
+			panel_continue(
+				"Prelievo campione",
+				"❌ Esito non valido.\nRiprova.",
+				func(): start_blood_draw_phase()
+			)
+
 			
 func show_edta_tube(hold_sec: float = 0.0) -> Tween:
 	if edta_icon == null:
@@ -580,6 +643,7 @@ func start_machine_insertion(p: Node) -> void:
 	
 func _record_emocromo_error(action: String, reasons: Array[String]) -> void:
 	emocromo_errors.append({
+		"donor_id": int(donor.get("id", -1)),
 		"donor_name": donor.get("name", "Sconosciuto"),
 		"donor_sex": donor.get("sex", "?"),
 		"action": action,
@@ -594,3 +658,150 @@ func _show_learning_error_and_retry(title: String, body: String) -> void:
 		func():
 			open_results_ui()
 	)
+
+func spawn_donors_on_seats() -> void:
+	spawned_donors.clear()
+	var seat_markers := []
+	for i in range(1, 6):
+		var m := get_node_or_null("SeatMarker%d" % i)
+		if m:
+			seat_markers.append(m)
+
+	var eligible_ids = RunState.donors_for_donation
+	print("SPAWN DONORS, eligible:", eligible_ids)
+
+	for i in range(min(eligible_ids.size(), seat_markers.size())):
+		var donor_index: int = int(eligible_ids[i])
+
+		var donor_data: Dictionary = RunState.donors[donor_index].duplicate(true)
+		donor_data["id"] = donor_index
+
+		var d := donor_scene.instantiate()
+		add_child(d)
+		d.global_position = seat_markers[i].global_position
+
+		d.setup(donor_data)
+		spawned_donors.append(d)
+		print("SPAWN:", donor_index, donor_data.get("name"), "id_in_data=", donor_data.get("id"))
+
+
+func _center_sfigmo_big() -> void:
+	if overlay == null or overlay_img == null:
+		return
+	if overlay_img.texture == null:
+		return
+
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.offset_left = 0
+	overlay.offset_top = 0
+	overlay.offset_right = 0
+	overlay.offset_bottom = 0
+
+	var vp: Vector2 = get_viewport().get_visible_rect().size
+	var ts: Vector2 = overlay_img.texture.get_size()
+
+	var s: float = min(vp.x / ts.x, vp.y / ts.y) * 0.92
+	var scaled: Vector2 = ts * s
+
+	overlay_img.set_anchors_preset(Control.PRESET_CENTER)
+	overlay_img.offset_left   = -scaled.x * 0.5
+	overlay_img.offset_top    = -scaled.y * 0.5
+	overlay_img.offset_right  =  scaled.x * 0.5
+	overlay_img.offset_bottom =  scaled.y * 0.5
+
+	overlay_img.scale = Vector2.ONE
+	overlay_img.pivot_offset = Vector2.ZERO
+
+func set_current_donor_node(n: Node) -> void:
+	current_donor_node = n
+
+func _lock_other_donors(lock: bool) -> void:
+	for d in spawned_donors:
+		if not is_instance_valid(d):
+			continue
+		if d.has_method("set_interaction_enabled"):
+			if lock:
+				d.set_interaction_enabled(d == current_donor_node)
+			else:
+				d.set_interaction_enabled(true)
+				
+func can_start_interaction() -> bool:
+	return (state == FlowState.IDLE) and (not donor_busy)
+
+func _pick_forced_eligible_ids() -> void:
+	forced_eligible_ids.clear()
+
+	# Id dei donatori che arrivano da Acceptance (quelli che spawni in Emocromo)
+	var eligible_ids: Array = RunState.donors_for_donation
+	if eligible_ids.is_empty():
+		return
+
+	# Limiti reali
+	var max_final: int = min(MAX_ELIGIBLE_TO_FINAL, eligible_ids.size())
+	var min_final: int = min(MIN_ELIGIBLE_TO_FINAL, max_final)
+
+	# target random tra 3 e 5 (o meno se non ci arrivi)
+	var target: int = rng.randi_range(min_final, max_final)
+
+	# Shuffle per non prendere sempre i primi (pull up la random vera)
+	var pool: Array = eligible_ids.duplicate()
+	pool.shuffle()
+
+	for i in range(target):
+		forced_eligible_ids.append(int(pool[i]))
+
+func _generate_eligible_results_for(sex: String) -> Dictionary:
+	var hb_min := 13.5 if sex == "M" else 12.5
+
+	return {
+		"hb": snappedf(randf_range(hb_min + 0.2, hb_min + 2.0), 0.1),
+		"wbc": snappedf(randf_range(4.2, 10.8), 0.1),
+		"plt": randi_range(160, 380)
+	}
+
+func _show_room_summary() -> void:
+	if pressure_panel:
+		pressure_panel.hide_panel()
+
+	if blood_minigame and blood_minigame.visible:
+		blood_minigame.hide()
+	if edta_icon:
+		edta_icon.visible = false
+
+	# Blocca player
+	if player and player.has_method("set_can_move"):
+		player.set_can_move(false)
+
+	var total: int = spawned_donors.size()
+	var errors_total: int = emocromo_errors.size()
+	var correct_first_try: int = total - _count_unique_donors_with_errors()
+
+	var title_label: Label = $SummaryLayer/SummaryPanel/Margin/VBox/Title
+	var body_label: Label  = $SummaryLayer/SummaryPanel/Margin/VBox/Body
+	var btn: Button        = $SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue
+
+	title_label.text = "Stanza completata ✅"
+	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d" % [
+		correct_first_try, total, errors_total
+	]
+
+	btn.text = "Prossima stanza"
+
+	# Mostra layer sopra tutto
+	$SummaryLayer.show()
+	$SummaryLayer.layer = 50
+
+func _count_unique_donors_with_errors() -> int:
+	var seen := {}
+	for e in emocromo_errors:
+		var id := int(e.get("donor_id", -1))
+		if id != -1:
+			seen[id] = true
+		else:
+			# fallback se non hai donor_id negli errori
+			seen[str(e.get("donor_name", ""))] = true
+	return seen.size()
+
+func _is_forced_donor() -> bool:
+	var id := int(donor.get("id", -1))
+	return id != -1 and forced_eligible_ids.has(id)

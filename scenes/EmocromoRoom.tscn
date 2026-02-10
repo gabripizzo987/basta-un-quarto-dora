@@ -1,4 +1,4 @@
-[gd_scene load_steps=48 format=4 uid="uid://3ut4e1bmbun5"]
+[gd_scene load_steps=44 format=4 uid="uid://3ut4e1bmbun5"]
 
 [ext_resource type="Script" uid="uid://ecwdyl6k7plw" path="res://scripts/EmocromoRoom.gd" id="1_8b6he"]
 [ext_resource type="Texture2D" uid="uid://66y62ta30eaa" path="res://assets/backgrounds/Spritesheets/Floor_2_16x16.png" id="1_b0d3b"]
@@ -9,16 +9,16 @@
 [ext_resource type="Texture2D" uid="uid://cdo20mq472jmf" path="res://assets/backgrounds/Spritesheets/spritesheet_hospital_lab.png" id="6_3q6h6"]
 [ext_resource type="PackedScene" uid="uid://dw3rt8mc0te2p" path="res://scenes/ManualEmo.tscn" id="6_rlx1w"]
 [ext_resource type="Texture2D" uid="uid://di1pac46e372j" path="res://assets/backgrounds/Spritesheets/spritesheet_hospital_02.png" id="7_6rf2x"]
-[ext_resource type="Script" uid="uid://bynrvsidn17pm" path="res://scripts/Daniele.gd" id="8_1uw47"]
 [ext_resource type="Script" uid="uid://dmkvwr84qknih" path="res://scripts/PressurePanel.gd" id="8_03igw"]
 [ext_resource type="Theme" uid="uid://rlxur78jvedg" path="res://PixelTheme.tres" id="8_ajyvp"]
-[ext_resource type="Texture2D" uid="uid://d4bfri4vokiee" path="res://assets/characters/character-spritesheet (5).png" id="8_wuuxr"]
-[ext_resource type="Script" uid="uid://f3vg477axsok" path="res://scripts/DonorArea.gd" id="9_1uw47"]
 [ext_resource type="FontFile" uid="uid://cmnbu5ay3bl4e" path="res://fonts/PixelOperator8-Bold.ttf" id="10_ajyvp"]
 [ext_resource type="PackedScene" uid="uid://5op7emasoov4" path="res://scenes/BloodDrawMiniGame.tscn" id="12_sipi1"]
 [ext_resource type="Texture2D" uid="uid://bxd6lfhr1qb0p" path="res://assets/backgrounds/Spritesheets/ChatGPT Image 20 gen 2026, 18_58_15 (1).png" id="13_c1vtc"]
 [ext_resource type="Texture2D" uid="uid://c6ik3t7hoqyel" path="res://assets/backgrounds/Spritesheets/Sfignomametro.png" id="14_ej7jk"]
+[ext_resource type="PackedScene" uid="uid://31yxwwykkanu" path="res://scenes/DonorEmocromo.tscn" id="16_a5hjs"]
+[ext_resource type="PackedScene" uid="uid://ccud38roe1kn0" path="res://SummaryLayer.tscn" id="18_3q6h6"]
 [ext_resource type="Script" uid="uid://hgn8270ajgw1" path="res://scripts/AnalyzerMachine.gd" id="19_6rf2x"]
+[ext_resource type="Script" uid="uid://b2ghcjn4cvam6" path="res://scripts/SummaryLayer.gd" id="19_ys8a8"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_rtj81"]
 texture = ExtResource("1_b0d3b")
@@ -3180,23 +3180,11 @@ corner_radius_bottom_left = 10
 bg_color = Color(0.776471, 0.156863, 0.156863, 1)
 border_color = Color(0.556863, 0, 0, 1)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_sh6iu"]
-atlas = ExtResource("8_wuuxr")
-region = Rect2(128, 2048, 64, 64)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_ys8a8"]
+size = Vector2(38, 26)
 
-[sub_resource type="SpriteFrames" id="SpriteFrames_ajyvp"]
-animations = [{
-"frames": [{
-"duration": 1.0,
-"texture": SubResource("AtlasTexture_sh6iu")
-}],
-"loop": true,
-"name": &"default",
-"speed": 5.0
-}]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ej7jk"]
-size = Vector2(6, 20)
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_6rf2x"]
+size = Vector2(30.5, 20)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sipi1"]
 content_margin_left = 8.0
@@ -3214,17 +3202,9 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_c1vtc"]
-size = Vector2(20, 2)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_ys8a8"]
-size = Vector2(38, 26)
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_6rf2x"]
-size = Vector2(30.5, 20)
-
 [node name="EmocromoRoom" type="Node2D"]
 script = ExtResource("1_8b6he")
+donor_scene = ExtResource("16_a5hjs")
 
 [node name="Nurse" parent="." instance=ExtResource("2_rtj81")]
 position = Vector2(559, -244)
@@ -3252,14 +3232,14 @@ tile_set = SubResource("TileSet_rlx1w")
 texture_filter = 1
 position = Vector2(39.5833, -35.4167)
 scale = Vector2(0.79, 0.79)
-tile_map_data = PackedByteArray("AAAKAPP/AAAAAAAAAAAKAPT/AAAAAAEAAAAKAPX/AAAAAAIAAAALAPP/AAABAAAAAAALAPT/AAABAAEAAAALAPX/AAABAAIAAAAHAPP/AAAAAAAAAAAHAPT/AAAAAAEAAAAHAPX/AAAAAAIAAAAIAPP/AAABAAAAAAAIAPT/AAABAAEAAAAIAPX/AAABAAIAAAAEAPP/AAAAAAAAAAAEAPT/AAAAAAEAAAAEAPX/AAAAAAIAAAAFAPP/AAABAAAAAAAFAPT/AAABAAEAAAAFAPX/AAABAAIAAAABAPP/AAAAAAAAAAABAPT/AAAAAAEAAAABAPX/AAAAAAIAAAACAPP/AAABAAAAAAACAPT/AAABAAEAAAACAPX/AAABAAIAAAD+//P/AAAAAAAAAAD+//T/AAAAAAEAAAD+//X/AAAAAAIAAAD///P/AAABAAAAAAD///T/AAABAAEAAAD///X/AAABAAIAAAA=")
+tile_map_data = PackedByteArray("AAAHAPP/AAAAAAAAAAAHAPT/AAAAAAEAAAAHAPX/AAAAAAIAAAAIAPP/AAABAAAAAAAIAPT/AAABAAEAAAAIAPX/AAABAAIAAAAEAPP/AAAAAAAAAAAEAPT/AAAAAAEAAAAEAPX/AAAAAAIAAAAFAPP/AAABAAAAAAAFAPT/AAABAAEAAAAFAPX/AAABAAIAAAABAPP/AAAAAAAAAAABAPT/AAAAAAEAAAABAPX/AAAAAAIAAAACAPP/AAABAAAAAAACAPT/AAABAAEAAAACAPX/AAABAAIAAAD+//P/AAAAAAAAAAD+//T/AAAAAAEAAAD+//X/AAAAAAIAAAD///P/AAABAAAAAAD///T/AAABAAEAAAD///X/AAABAAIAAAA=")
 tile_set = SubResource("TileSet_8b6he")
 
 [node name="TileMapLayer2" type="TileMapLayer" parent="Node2D"]
 texture_filter = 1
 position = Vector2(39.5833, -35.4167)
 scale = Vector2(0.79, 0.79)
-tile_map_data = PackedByteArray("AAAKAPP/AAAAAAAAAAAKAPT/AAAAAAEAAAAKAPX/AAAAAAIAAAALAPP/AAABAAAAAAALAPT/AAABAAEAAAALAPX/AAABAAIAAAAHAPP/AAAAAAAAAAAHAPT/AAAAAAEAAAAHAPX/AAAAAAIAAAAIAPP/AAABAAAAAAAIAPT/AAABAAEAAAAIAPX/AAABAAIAAAAEAPP/AAAAAAAAAAAEAPT/AAAAAAEAAAAEAPX/AAAAAAIAAAAFAPP/AAABAAAAAAAFAPT/AAABAAEAAAAFAPX/AAABAAIAAAABAPP/AAAAAAAAAAABAPT/AAAAAAEAAAABAPX/AAAAAAIAAAACAPP/AAABAAAAAAACAPT/AAABAAEAAAACAPX/AAABAAIAAAD+//P/AAAAAAAAAAD+//T/AAAAAAEAAAD+//X/AAAAAAIAAAD///P/AAABAAAAAAD///T/AAABAAEAAAD///X/AAABAAIAAAA=")
+tile_map_data = PackedByteArray("AAAHAPP/AAAAAAAAAAAHAPT/AAAAAAEAAAAHAPX/AAAAAAIAAAAIAPP/AAABAAAAAAAIAPT/AAABAAEAAAAIAPX/AAABAAIAAAAEAPP/AAAAAAAAAAAEAPT/AAAAAAEAAAAEAPX/AAAAAAIAAAAFAPP/AAABAAAAAAAFAPT/AAABAAEAAAAFAPX/AAABAAIAAAABAPP/AAAAAAAAAAABAPT/AAAAAAEAAAABAPX/AAAAAAIAAAACAPP/AAABAAAAAAACAPT/AAABAAEAAAACAPX/AAABAAIAAAD+//P/AAAAAAAAAAD+//T/AAAAAAEAAAD+//X/AAAAAAIAAAD///P/AAABAAAAAAD///T/AAABAAEAAAD///X/AAABAAIAAAD7//P/AAAAAAAAAAD7//T/AAAAAAEAAAD7//X/AAAAAAIAAAD8//P/AAABAAAAAAD8//T/AAABAAEAAAD8//X/AAABAAIAAAA=")
 tile_set = SubResource("TileSet_8b6he")
 
 [node name="IntroLayer" type="CanvasLayer" parent="."]
@@ -3430,14 +3410,15 @@ theme_override_styles/normal = SubResource("StyleBoxFlat_ys8a8")
 text = "Rimanda"
 
 [node name="PressureOverlay" type="Control" parent="UI"]
-visible = false
 layout_mode = 3
-anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
 
 [node name="SfigmoBig" type="TextureRect" parent="UI/PressureOverlay"]
-visible = false
 modulate = Color(1, 1, 1, 0)
 texture_filter = 1
 layout_mode = 1
@@ -3453,7 +3434,8 @@ offset_bottom = 512.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("14_ej7jk")
-stretch_mode = 5
+expand_mode = 1
+stretch_mode = 4
 
 [node name="BloodDrawMiniGame" parent="UI" instance=ExtResource("12_sipi1")]
 
@@ -3475,74 +3457,6 @@ mouse_filter = 2
 texture = ExtResource("13_c1vtc")
 expand_mode = 1
 stretch_mode = 5
-
-[node name="Daniele" type="CharacterBody2D" parent="."]
-texture_filter = 1
-position = Vector2(428, -421)
-script = ExtResource("8_1uw47")
-
-[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="Daniele"]
-sprite_frames = SubResource("SpriteFrames_ajyvp")
-
-[node name="Area2D" type="Area2D" parent="Daniele"]
-script = ExtResource("9_1uw47")
-
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Daniele/Area2D"]
-position = Vector2(0, -14)
-shape = SubResource("RectangleShape2D_ej7jk")
-
-[node name="InteractPrompt" type="Control" parent="Daniele"]
-layout_mode = 3
-anchors_preset = 0
-offset_left = -23.0
-offset_top = -64.0
-offset_right = -23.0
-offset_bottom = -64.0
-mouse_filter = 2
-
-[node name="Pill" type="PanelContainer" parent="Daniele/InteractPrompt"]
-layout_mode = 0
-offset_left = -21.0
-offset_top = 7.0
-offset_right = 64.0
-offset_bottom = 37.0
-theme_override_styles/panel = SubResource("StyleBoxFlat_sipi1")
-
-[node name="HBoxContainer" type="HBoxContainer" parent="Daniele/InteractPrompt/Pill"]
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="Key" type="Label" parent="Daniele/InteractPrompt/Pill/HBoxContainer"]
-texture_filter = 1
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("5_b00t5")
-theme_override_font_sizes/font_size = 12
-text = "E"
-uppercase = true
-
-[node name="Text" type="Label" parent="Daniele/InteractPrompt/Pill/HBoxContainer"]
-texture_filter = 1
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("5_b00t5")
-theme_override_font_sizes/font_size = 12
-text = "Interagisci"
-
-[node name="Collisione" type="CollisionShape2D" parent="Daniele"]
-z_index = 2
-position = Vector2(0, -8)
-shape = SubResource("RectangleShape2D_c1vtc")
-
-[node name="Props" type="Node2D" parent="Daniele"]
-
-[node name="Sfigmo" type="Sprite2D" parent="Daniele/Props"]
-visible = false
-z_index = 6
-texture_filter = 1
-position = Vector2(16, 8)
-scale = Vector2(0.026, 0.026)
-texture = ExtResource("14_ej7jk")
 
 [node name="AnalyzerMachine" type="StaticBody2D" parent="."]
 
@@ -3592,9 +3506,9 @@ theme_override_constants/separation = 6
 [node name="Key" type="Label" parent="AnalyzerMachine/InteractPrompt/Pill/HBoxContainer"]
 texture_filter = 1
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_color = Color(0, 1, 0, 0.996078)
 theme_override_fonts/font = ExtResource("5_b00t5")
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 14
 text = "E"
 uppercase = true
 
@@ -3606,8 +3520,25 @@ theme_override_fonts/font = ExtResource("5_b00t5")
 theme_override_font_sizes/font_size = 12
 text = "Interagisci"
 
+[node name="SeatMarker1" type="Marker2D" parent="."]
+position = Vector2(-28, -421)
+
+[node name="SeatMarker2" type="Marker2D" parent="."]
+position = Vector2(63, -421)
+
+[node name="SeatMarker3" type="Marker2D" parent="."]
+position = Vector2(154, -421)
+
+[node name="SeatMarker4" type="Marker2D" parent="."]
+position = Vector2(245, -421)
+
+[node name="SeatMarker5" type="Marker2D" parent="."]
+position = Vector2(337, -421)
+
+[node name="SummaryLayer" parent="." instance=ExtResource("18_3q6h6")]
+visible = false
+script = ExtResource("19_ys8a8")
+
 [connection signal="pressed" from="IntroLayer/IntroPanel/Margin/VBox/ButtonsRow/Intro" to="." method="_on_intro_pressed"]
-[connection signal="body_entered" from="Daniele/Area2D" to="Daniele" method="_on_area_2d_body_entered"]
-[connection signal="body_exited" from="Daniele/Area2D" to="Daniele" method="_on_area_2d_body_exited"]
 [connection signal="body_entered" from="AnalyzerMachine/InteractArea" to="." method="_on_analyzer_machine_body_entered"]
 [connection signal="body_exited" from="AnalyzerMachine/InteractArea" to="." method="_on_analyzer_machine_body_exited"]

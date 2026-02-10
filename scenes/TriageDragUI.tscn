@@ -1,39 +1,21 @@
-[gd_scene load_steps=8 format=3 uid="uid://dy0rm6todo3qy"]
+[gd_scene load_steps=10 format=3 uid="uid://dy0rm6todo3qy"]
 
 [ext_resource type="Script" uid="uid://c2ut1yfbobu3t" path="res://scripts/TriageDragUI.gd" id="1_24it3"]
 [ext_resource type="Script" uid="uid://dybf3gx7g8ng0" path="res://scripts/DonorDragCard.gd" id="2_s5xmm"]
 [ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="3_5c7p2"]
+[ext_resource type="Texture2D" uid="uid://sfi3aydndsd1" path="res://bag_nonidoneo.tres" id="3_yty3l"]
+[ext_resource type="Texture2D" uid="uid://46bskvgc5rr6" path="res://bag_idoneo.tres" id="4_ctfo8"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_5c7p2"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5c7p2"]
-bg_color = Color(0.0352941, 0, 0.45098, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.0676667, 3.85046e-07, 0.63327, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-shadow_offset = Vector2(2, 2)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_qcqrj"]
+texture = ExtResource("3_yty3l")
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_na80y"]
-bg_color = Color(0.0369403, 0, 0.452181, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.0666667, 0, 0.631373, 1)
-corner_radius_top_left = 14
-corner_radius_top_right = 14
-corner_radius_bottom_right = 14
-corner_radius_bottom_left = 14
-shadow_offset = Vector2(2, 2)
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_k3mnu"]
+texture = ExtResource("4_ctfo8")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_yty3l"]
-bg_color = Color(0.365, 0, 1, 0)
+bg_color = Color(0.365, 0, 1, 0.398)
 
 [node name="TriageDragUI" type="Control"]
 layout_mode = 3
@@ -86,20 +68,21 @@ anchors_preset = 12
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = -141.0
-offset_right = 16.0
-offset_bottom = -1.0
+offset_left = 386.0
+offset_top = -286.0
+offset_right = 208.0
+offset_bottom = -76.0
 grow_horizontal = 2
 grow_vertical = 0
 theme_override_constants/separation = 24
 
 [node name="DropNonIdoneo" type="Panel" parent="Root/DropRow"]
 modulate = Color(1, 1, 1, 0.85)
-custom_minimum_size = Vector2(320, 140)
+texture_filter = 1
+custom_minimum_size = Vector2(243, 113)
 layout_mode = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_5c7p2")
+theme_override_styles/panel = SubResource("StyleBoxTexture_qcqrj")
 
 [node name="CenterContainer" type="CenterContainer" parent="Root/DropRow/DropNonIdoneo"]
 layout_mode = 1
@@ -115,22 +98,13 @@ offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="Root/DropRow/DropNonIdoneo/CenterContainer"]
-texture_filter = 1
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0, 0, 1)
-theme_override_fonts/font = ExtResource("3_5c7p2")
-theme_override_font_sizes/font_size = 26
-text = "NON IDONEO"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="DropIdoneo" type="Panel" parent="Root/DropRow"]
 modulate = Color(1, 1, 1, 0.85)
-custom_minimum_size = Vector2(320, 140)
+texture_filter = 1
+custom_minimum_size = Vector2(242, 107)
 layout_mode = 2
 mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_na80y")
+theme_override_styles/panel = SubResource("StyleBoxTexture_k3mnu")
 
 [node name="CenterContainer" type="CenterContainer" parent="Root/DropRow/DropIdoneo"]
 layout_mode = 1
@@ -146,24 +120,14 @@ offset_bottom = 20.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Label" type="Label" parent="Root/DropRow/DropIdoneo/CenterContainer"]
-texture_filter = 1
-layout_mode = 2
-theme_override_colors/font_color = Color(0, 1, 0, 1)
-theme_override_fonts/font = ExtResource("3_5c7p2")
-theme_override_font_sizes/font_size = 26
-text = "IDONEO"
-horizontal_alignment = 1
-vertical_alignment = 1
-
 [node name="HintBar" type="PanelContainer" parent="Root"]
 texture_filter = 1
-custom_minimum_size = Vector2(56, 51)
+custom_minimum_size = Vector2(56, 49)
 layout_mode = 1
-offset_left = -104.0
-offset_top = 2.0
-offset_right = 774.0
-offset_bottom = 53.0
+offset_left = -88.0
+offset_top = -1.0
+offset_right = 730.0
+offset_bottom = 51.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_yty3l")
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/HintBar"]

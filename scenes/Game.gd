@@ -14,6 +14,8 @@ var donors = []
 var current_donor_index = -1
 var decision_locked: bool = false
 var current_donor_node: Node2D = null
+signal error_popup_opened
+signal error_popup_closed
 
 @onready var button_accept: Button = $PanelAccept/ContentVBox/ButtonsHBox/ButtonAccept
 @onready var button_reject: Button = $PanelAccept/ContentVBox/ButtonsHBox/ButtonReject
@@ -440,6 +442,14 @@ func _finish_current_donor() -> void:
 	current_donor_index = -1
 
 	if _all_donors_done():
+		RunState.donors = donors.duplicate(true)
+		RunState.donors_for_donation = donors_for_donation.duplicate()
+		RunState.mistakes_total = mistakes_total
+		RunState.donors_missed_first_try = donors_missed_first_try.duplicate()
+		
+		print("RUNSTATE SAVED:")
+		print("donors:", RunState.donors.size())
+		print("eligible:", RunState.donors_for_donation)
 		emit_signal("all_donors_completed")
 	get_parent().get_node("TriageDragUI").visible = false
 	
@@ -580,10 +590,16 @@ func _on_button_close_manual_pressed() -> void:
 
 func _on_button_ok_pressed() -> void:
 	error_popup.visible = false
+	emit_signal("error_popup_closed")
 
 func show_error_popup(reason: String) -> void:
 	error_popup.visible = true
 	error_text.text = "Motivo:\n%s" % reason
+
+	if error_popup is Control:
+		(error_popup as Control).move_to_front()
+
+	emit_signal("error_popup_opened")
 
 	var ok_btn := error_popup.get_node("Margin/VBox/ButtonsRow/ButtonOk") as Button
 	if ok_btn:
@@ -591,6 +607,7 @@ func show_error_popup(reason: String) -> void:
 		ok_btn.mouse_filter = Control.MOUSE_FILTER_STOP
 		ok_btn.focus_mode = Control.FOCUS_ALL
 		ok_btn.grab_focus()
+
 
 func open_for_donor_index(index: int, player: Node) -> void:
 	current_player = player

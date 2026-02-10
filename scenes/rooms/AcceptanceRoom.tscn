@@ -1,4 +1,4 @@
-[gd_scene load_steps=83 format=4 uid="uid://d1obhnv260tkl"]
+[gd_scene load_steps=88 format=4 uid="uid://d1obhnv260tkl"]
 
 [ext_resource type="Texture2D" uid="uid://cmu17pkqgpow8" path="res://assets/backgrounds/Spritesheets/Room_Builder_free_32x32.png" id="1_ub8uq"]
 [ext_resource type="Script" uid="uid://8iwkvfdhaba1" path="res://scripts/AcceptanceRoom.gd" id="1_v7e3e"]
@@ -22,6 +22,8 @@
 [ext_resource type="PackedScene" uid="uid://dy0rm6todo3qy" path="res://scenes/TriageDragUI.tscn" id="21_p1knn"]
 [ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="22_p1knn"]
 [ext_resource type="Script" uid="uid://c0saw7b8orrak" path="res://scripts/InteractPrompt.gd" id="22_radfe"]
+[ext_resource type="Texture2D" uid="uid://m4vdg7oays01" path="res://assets/backgrounds/Spritesheets/Arrows_pack.png" id="22_wryu8"]
+[ext_resource type="PackedScene" uid="uid://ccud38roe1kn0" path="res://SummaryLayer.tscn" id="23_p1knn"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_p1knn"]
 resource_name = "walls"
@@ -23493,6 +23495,54 @@ animations = [{
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_67vcl"]
 size = Vector2(6, 20)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_radfe"]
+bg_color = Color(0.835294, 0.435294, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nmquo"]
+bg_color = Color(0.262707, 0.499675, 0.959768, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fpkok"]
+bg_color = Color(0.35208, 0.566127, 0.977617, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_67vcl"]
+bg_color = Color(0.184314, 0.435294, 0.929412, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3np3y"]
+atlas = ExtResource("22_wryu8")
+region = Rect2(0, 1265.78, 928.982, 490.314)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p1knn"]
+bg_color = Color(0.835378, 0.434187, 1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_size = 8
+
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wfq73"]
 content_margin_left = 8.0
 content_margin_top = 4.0
@@ -23521,27 +23571,6 @@ corner_radius_top_right = 14
 corner_radius_bottom_right = 14
 corner_radius_bottom_left = 14
 shadow_color = Color(0, 0, 0, 0.603)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nmquo"]
-bg_color = Color(0.262707, 0.499675, 0.959768, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fpkok"]
-bg_color = Color(0.35208, 0.566127, 0.977617, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_67vcl"]
-bg_color = Color(0.184314, 0.435294, 0.929412, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
 
 [node name="AcceptanceRoom" type="Node2D"]
 script = ExtResource("1_v7e3e")
@@ -23841,6 +23870,136 @@ theme = ExtResource("20_365g4")
 [node name="TriageDragUI" parent="UI" instance=ExtResource("21_p1knn")]
 mouse_filter = 2
 
+[node name="TutorialManual" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="UI/TutorialManual"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.65)
+
+[node name="Panel" type="Panel" parent="UI/TutorialManual"]
+layout_mode = 0
+offset_left = 924.0
+offset_top = 1.0
+offset_right = 1225.0
+offset_bottom = 139.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_radfe")
+
+[node name="Label" type="Label" parent="UI/TutorialManual/Panel"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 293.0
+offset_bottom = 78.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
+theme_override_font_sizes/font_size = 18
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="ButtonOk" type="Button" parent="UI/TutorialManual/Panel"]
+custom_minimum_size = Vector2(176, 44)
+layout_mode = 0
+offset_left = 117.0
+offset_top = 92.0
+offset_right = 297.0
+offset_bottom = 136.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_nmquo")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
+theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")
+text = "OK
+"
+
+[node name="Arrow" type="TextureRect" parent="UI/TutorialManual"]
+texture_filter = 1
+custom_minimum_size = Vector2(101, 49)
+layout_mode = 0
+offset_left = 1348.0
+offset_top = 132.0
+offset_right = 1449.0
+offset_bottom = 198.0
+rotation = -1.5708
+texture = SubResource("AtlasTexture_3np3y")
+expand_mode = 1
+
+[node name="TutorialDrag" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="UI/TutorialDrag"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -105.0
+offset_right = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="Panel" parent="UI/TutorialDrag"]
+custom_minimum_size = Vector2(460, 0)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -230.0
+offset_right = 290.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_p1knn")
+
+[node name="Label" type="Label" parent="UI/TutorialDrag/Panel"]
+layout_mode = 0
+offset_left = 19.0
+offset_right = 497.0
+offset_bottom = 108.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
+theme_override_font_sizes/font_size = 16
+text = "Trascina il donatore:
+tieni premuto CLICK SINISTRO
+e rilascialo su IDONEO o NON IDONEO."
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 3
+
+[node name="ButtonOk" type="Button" parent="UI/TutorialDrag/Panel"]
+custom_minimum_size = Vector2(240, 44)
+layout_mode = 0
+offset_left = 277.0
+offset_top = 153.0
+offset_right = 517.0
+offset_bottom = 197.0
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("22_p1knn")
+theme_override_styles/hover = SubResource("StyleBoxFlat_nmquo")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
+theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")
+text = "Continua"
+
 [node name="InteractPrompt" type="Control" parent="UI"]
 z_index = 4096
 texture_filter = 1
@@ -23972,83 +24131,7 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
 theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")
 text = "Inizia turno"
 
-[node name="SummaryLayer" type="CanvasLayer" parent="."]
+[node name="SummaryLayer" parent="." instance=ExtResource("23_p1knn")]
 
-[node name="Dim" type="ColorRect" parent="SummaryLayer"]
-modulate = Color(0, 0, 0, 1)
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("20_365g4")
-color = Color(0, 0, 0, 0.45)
-
-[node name="SummaryPanel" type="Panel" parent="SummaryLayer"]
-custom_minimum_size = Vector2(350, 200)
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -175.0
-offset_top = -100.0
-offset_right = 274.0
-offset_bottom = 124.0
-grow_horizontal = 2
-grow_vertical = 2
-theme = ExtResource("20_365g4")
-theme_override_styles/panel = SubResource("StyleBoxFlat_4bfal")
-
-[node name="Margin" type="MarginContainer" parent="SummaryLayer/SummaryPanel"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_top = 14
-theme_override_constants/margin_right = 16
-theme_override_constants/margin_bottom = 14
-
-[node name="VBox" type="VBoxContainer" parent="SummaryLayer/SummaryPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 12
-
-[node name="Title" type="Label" parent="SummaryLayer/SummaryPanel/Margin/VBox"]
-layout_mode = 2
-theme = ExtResource("20_365g4")
-theme_override_fonts/font = ExtResource("22_p1knn")
-theme_override_font_sizes/font_size = 26
-text = "Benvenuto al Centro Trasfusionale"
-
-[node name="Body" type="Label" parent="SummaryLayer/SummaryPanel/Margin/VBox"]
-texture_filter = 1
-layout_mode = 2
-theme = ExtResource("20_365g4")
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_fonts/font = ExtResource("22_p1knn")
-theme_override_font_sizes/font_size = 16
-text = "Oggi sei l’operatore di triage.
-
-Parla con i 5 donatori e decidi se sono idonei
-o se devono essere rimandati.
-
-Se hai dubbi, consulta il Manuale in alto a destra."
-autowrap_mode = 2
-
-[node name="ButtonsRow" type="HBoxContainer" parent="SummaryLayer/SummaryPanel/Margin/VBox"]
-layout_mode = 2
-
-[node name="Continue" type="Button" parent="SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow"]
-texture_filter = 1
-custom_minimum_size = Vector2(240, 44)
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_fonts/font = ExtResource("22_p1knn")
-theme_override_styles/hover = SubResource("StyleBoxFlat_nmquo")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
-theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")
-text = "Prossima stanza"
-
+[connection signal="pressed" from="UI/TutorialDrag/Panel/ButtonOk" to="." method="_on_intro_pressed"]
 [connection signal="pressed" from="IntroLayer/IntroPanel/Margin/VBox/ButtonsRow/Intro" to="." method="_on_intro_pressed"]
-[connection signal="pressed" from="SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue" to="." method="_on_intro_pressed"]
-[connection signal="pressed" from="SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue" to="." method="_on_continue_pressed"]

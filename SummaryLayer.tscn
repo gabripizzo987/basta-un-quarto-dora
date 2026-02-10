@@ -1,0 +1,115 @@
+[gd_scene load_steps=7 format=3 uid="uid://ccud38roe1kn0"]
+
+[ext_resource type="Theme" uid="uid://rlxur78jvedg" path="res://PixelTheme.tres" id="1_cdf6x"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="2_c0kq6"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4bfal"]
+bg_color = Color(0.117647, 0.117647, 0.141176, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.227451, 0.227451, 0.27451, 1)
+corner_radius_top_left = 14
+corner_radius_top_right = 14
+corner_radius_bottom_right = 14
+corner_radius_bottom_left = 14
+shadow_color = Color(0, 0, 0, 0.603)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nmquo"]
+bg_color = Color(0.262707, 0.499675, 0.959768, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_fpkok"]
+bg_color = Color(0.35208, 0.566127, 0.977617, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_67vcl"]
+bg_color = Color(0.184314, 0.435294, 0.929412, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="SummaryLayer" type="CanvasLayer"]
+
+[node name="Dim" type="ColorRect" parent="."]
+modulate = Color(0, 0, 0, 1)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_cdf6x")
+color = Color(0, 0, 0, 0.45)
+
+[node name="SummaryPanel" type="Panel" parent="."]
+custom_minimum_size = Vector2(350, 200)
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -175.0
+offset_top = -100.0
+offset_right = 274.0
+offset_bottom = 124.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_cdf6x")
+theme_override_styles/panel = SubResource("StyleBoxFlat_4bfal")
+
+[node name="Margin" type="MarginContainer" parent="SummaryPanel"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="VBox" type="VBoxContainer" parent="SummaryPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="SummaryPanel/Margin/VBox"]
+layout_mode = 2
+theme = ExtResource("1_cdf6x")
+theme_override_fonts/font = ExtResource("2_c0kq6")
+theme_override_font_sizes/font_size = 26
+text = "Benvenuto al Centro Trasfusionale"
+
+[node name="Body" type="Label" parent="SummaryPanel/Margin/VBox"]
+texture_filter = 1
+layout_mode = 2
+theme = ExtResource("1_cdf6x")
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_fonts/font = ExtResource("2_c0kq6")
+theme_override_font_sizes/font_size = 16
+text = "Oggi sei l’operatore di triage.
+
+Parla con i 5 donatori e decidi se sono idonei
+o se devono essere rimandati.
+
+Se hai dubbi, consulta il Manuale in alto a destra."
+autowrap_mode = 2
+
+[node name="ButtonsRow" type="HBoxContainer" parent="SummaryPanel/Margin/VBox"]
+layout_mode = 2
+
+[node name="Continue" type="Button" parent="SummaryPanel/Margin/VBox/ButtonsRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, 44)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_fonts/font = ExtResource("2_c0kq6")
+theme_override_styles/hover = SubResource("StyleBoxFlat_nmquo")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_fpkok")
+theme_override_styles/normal = SubResource("StyleBoxFlat_67vcl")
+text = "Prossima stanza"

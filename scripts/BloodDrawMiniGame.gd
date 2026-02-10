@@ -12,6 +12,7 @@ signal done(result: String) # "success" | "borderline" | "fail"
 @onready var needle: TextureRect = $Frame/Margin/VBox/PlayField/Needle
 @onready var elbow: Marker2D = $Frame/Margin/VBox/PlayField/Arm/ElbowMarker
 @onready var margin: MarginContainer = $Frame/Margin
+@onready var vein_x: TextureRect = $Frame/Margin/VBox/PlayField/VeinDot
 
 var active: bool = false
 var speed: float = 280.0
@@ -90,11 +91,22 @@ func start() -> void:
 	needle.size = Vector2(desired_w, desired_h)
 
 	_place_zone_on_elbow()
+	zone.color = Color(0, 1, 0, 0)
+	
+	vein_x.visible = true
+	await get_tree().process_frame 
+
+# Centro la X dove sta la hitbox (zone)
+	vein_x.position = zone.position + (zone.size * 0.5) - (vein_x.size * 0.5)
+
+# micro tweak “più naturale”
+	vein_x.position += Vector2(11, 2)
 
 	var zone_center: Vector2 = zone.position + zone.size * 0.5
 	var tip_local: Vector2 = _tip_local_for_alignment()
 	var base_pos: Vector2 = zone_center - tip_local
 	base_pos.x += NEEDLE_X_OFFSET
+	
 
 	fixed_x = _clamp_needle_x(base_pos.x)
 	needle.position.x = fixed_x
@@ -199,7 +211,7 @@ func _check_result() -> void:
 		"fail":
 			hint.text = "❌ Fuori punto. Ripeti con calma."
 
-	await get_tree().create_timer(0.9).timeout
+	await get_tree().create_timer(2.0).timeout
 	hide()
 	emit_signal("done", result)
 
