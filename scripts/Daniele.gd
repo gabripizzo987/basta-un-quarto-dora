@@ -69,17 +69,26 @@ func interact(player: Node) -> void:
 	if donor_done:
 		if get_tree().current_scene.has_method("show_feedback"):
 			get_tree().current_scene.show_feedback(
-				"Hai già raccolto il campione da %s." % donor_name
+				"Hai già gestito %s." % donor_name
 			)
 		return
 
 	var room := get_tree().current_scene
 	if room and room.has_method("set_current_donor_node"):
-		room.set_current_donor_node(self)  # ✅ NEW: dice alla stanza “sono io quello corrente”
+		room.set_current_donor_node(self)
 
-	get_tree().current_scene.start_emocromo_for(get_donor_data())
+	# ✅ Se siamo in EmocromoRoom
+	if room and room.has_method("start_emocromo_for"):
+		room.start_emocromo_for(get_donor_data())
+		return
 
+	# ✅ Se siamo in FinalRoom (minigioco donazione)
+	if room and room.has_method("start_donation_for"):
+		room.start_donation_for(donor_id)
+		return
 
+	# fallback
+	push_warning("Questa scena non gestisce l'interazione del donatore.")
 
 func _on_area_2d_body_entered(body: Node2D) -> void:
 	if donor_done or not interaction_enabled:

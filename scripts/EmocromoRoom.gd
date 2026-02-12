@@ -360,6 +360,10 @@ func _on_decision_accept() -> void:
 	var eligible := is_eligible(donor["sex"], results)
 
 	if eligible:
+		var id := int(donor.get("id", -1))
+		if id != -1 and not RunState.donors_for_final.has(id):
+			RunState.donors_for_final.append(id)
+			
 		panel_continue(
 			"Esito decisione",
 			"✅ Scelta corretta: donatore idoneo.",
@@ -762,13 +766,11 @@ func _generate_eligible_results_for(sex: String) -> Dictionary:
 func _show_room_summary() -> void:
 	if pressure_panel:
 		pressure_panel.hide_panel()
-
 	if blood_minigame and blood_minigame.visible:
 		blood_minigame.hide()
 	if edta_icon:
 		edta_icon.visible = false
 
-	# Blocca player
 	if player and player.has_method("set_can_move"):
 		player.set_can_move(false)
 
@@ -784,12 +786,19 @@ func _show_room_summary() -> void:
 	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d" % [
 		correct_first_try, total, errors_total
 	]
-
 	btn.text = "Prossima stanza"
 
-	# Mostra layer sopra tutto
+	# IMPORTANT: evita connect multipli se la funzione viene richiamata più volte
+	if btn.pressed.is_connected(_go_to_final_room):
+		btn.pressed.disconnect(_go_to_final_room)
+	btn.pressed.connect(_go_to_final_room)
+
 	$SummaryLayer.show()
 	$SummaryLayer.layer = 50
+
+
+func _go_to_final_room() -> void:
+	get_tree().change_scene_to_file("res://scenes/FinalRoom.tscn")
 
 func _count_unique_donors_with_errors() -> int:
 	var seen := {}

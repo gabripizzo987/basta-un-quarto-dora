@@ -211,7 +211,7 @@ func _check_result() -> void:
 		"fail":
 			hint.text = "❌ Fuori punto. Ripeti con calma."
 
-	await get_tree().create_timer(2.0).timeout
+	await get_tree().create_timer(1.7).timeout
 	hide()
 	emit_signal("done", result)
 
