@@ -54,7 +54,7 @@ func _apply_sprite() -> void:
 		return
 
 	sprite.frames = chosen_frames
-	sprite.play("default")   # ⚠️ animazione UNICA, seduto
+	sprite.play("default")  
 
 
 func get_donor_data() -> Dictionary:
@@ -66,6 +66,7 @@ func get_donor_data() -> Dictionary:
 
 
 func interact(player: Node) -> void:
+	print("DONOR INTERACT:", donor_id, donor_name, "scene=", get_tree().current_scene.name)
 	if donor_done:
 		if get_tree().current_scene.has_method("show_feedback"):
 			get_tree().current_scene.show_feedback(
@@ -77,12 +78,12 @@ func interact(player: Node) -> void:
 	if room and room.has_method("set_current_donor_node"):
 		room.set_current_donor_node(self)
 
-	# ✅ Se siamo in EmocromoRoom
+	# Se siamo in EmocromoRoom
 	if room and room.has_method("start_emocromo_for"):
 		room.start_emocromo_for(get_donor_data())
 		return
 
-	# ✅ Se siamo in FinalRoom (minigioco donazione)
+	# Se siamo in FinalRoom (minigioco donazione)
 	if room and room.has_method("start_donation_for"):
 		room.start_donation_for(donor_id)
 		return

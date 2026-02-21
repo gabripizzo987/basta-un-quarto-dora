@@ -41,6 +41,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 
 	if event.is_action_pressed("interact"):
+		print("[DONOR] E pressed -> calling start_donation_for on scene=", get_tree().current_scene.name)
 		if interact_target != null:
 			# chiama una funzione sul donatore
 			if interact_target.has_method("interact"):

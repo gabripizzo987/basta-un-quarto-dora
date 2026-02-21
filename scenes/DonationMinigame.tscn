@@ -1,10 +1,17 @@
-[gd_scene load_steps=6 format=3 uid="uid://cek8oax5n313o"]
+[gd_scene load_steps=8 format=3 uid="uid://cek8oax5n313o"]
 
 [ext_resource type="Script" uid="uid://csu2akonf7t8a" path="res://scripts/DonationMinigame.gd" id="1_w4mr4"]
 [ext_resource type="Texture2D" uid="uid://cshcjrsdoi1ti" path="res://assets/backgrounds/Spritesheets/ManoAperta.png" id="2_30yds"]
 [ext_resource type="Texture2D" uid="uid://dqbhxr8w0ubw6" path="res://assets/backgrounds/Spritesheets/ManoChiusa.png" id="3_di5x0"]
-[ext_resource type="Texture2D" uid="uid://bnwp6mwphjkpe" path="res://assets/backgrounds/Spritesheets/SaccaVuota.png" id="4_dg5j2"]
-[ext_resource type="Texture2D" uid="uid://blskgf1chu2xl" path="res://assets/backgrounds/Spritesheets/SaccaPiena.png" id="5_o6yjy"]
+[ext_resource type="Shader" uid="uid://nxlgqnfvg7h3" path="res://scenes/blood_fill_sprite.gdshader" id="4_30yds"]
+[ext_resource type="Texture2D" uid="uid://cggvqiku2nbdl" path="res://assets/backgrounds/Spritesheets/SaccaPiena-1.png (1).png" id="5_30yds"]
+[ext_resource type="Texture2D" uid="uid://c03t7cnvsve3g" path="res://assets/backgrounds/Spritesheets/Sacca2.png" id="5_w4mr4"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_di5x0"]
+shader = ExtResource("4_30yds")
+shader_parameter/fill_amount = 0.0
+shader_parameter/cut_top = 0.0
+shader_parameter/cut_bottom = 0.0
 
 [node name="DonationMinigame" type="Control"]
 layout_mode = 3
@@ -13,6 +20,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(0.63, 0.63)
 script = ExtResource("1_w4mr4")
 hand_open = ExtResource("2_30yds")
 hand_closed = ExtResource("3_di5x0")
@@ -24,7 +32,8 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0, 0, 0, 0.5)
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
 
 [node name="TimerLabel" type="Label" parent="."]
 layout_mode = 0
@@ -36,45 +45,67 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -138.095
+offset_top = -676.19
+offset_right = 885.905
+offset_bottom = 786.81
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+[node name="Offset" type="MarginContainer" parent="CenterContainer"]
 layout_mode = 2
 
-[node name="BagStack" type="Control" parent="CenterContainer/VBoxContainer"]
-custom_minimum_size = Vector2(260, 260)
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Offset"]
+layout_mode = 2
+
+[node name="BagStack" type="Control" parent="CenterContainer/Offset/VBoxContainer"]
+custom_minimum_size = Vector2(1024, 1024)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
 
-[node name="BagFill" type="TextureProgressBar" parent="CenterContainer/VBoxContainer/BagStack"]
+[node name="Clip" type="Control" parent="CenterContainer/Offset/VBoxContainer/BagStack"]
+clip_contents = true
+custom_minimum_size = Vector2(1024, 1024)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 43.5
+offset_right = 40.0
+offset_bottom = 43.5
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BloodFill" type="Sprite2D" parent="CenterContainer/Offset/VBoxContainer/BagStack/Clip"]
+material = SubResource("ShaderMaterial_di5x0")
+texture = ExtResource("5_30yds")
+region_rect = Rect2(358.712, 287.482, 304.483, 334.411)
+
+[node name="BagFrame" type="TextureRect" parent="CenterContainer/Offset/VBoxContainer/BagStack"]
 texture_filter = 1
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 40.0
+offset_top = 132.5
+offset_right = 40.0
+offset_bottom = 132.5
 grow_horizontal = 2
 grow_vertical = 2
-fill_mode = 3
-texture_under = ExtResource("4_dg5j2")
-texture_progress = ExtResource("5_o6yjy")
+mouse_filter = 2
+texture = ExtResource("5_w4mr4")
 
-[node name="BagFrame" type="TextureRect" parent="CenterContainer/VBoxContainer/BagStack"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-texture = ExtResource("4_dg5j2")
-
-[node name="Hand" type="TextureRect" parent="CenterContainer/VBoxContainer"]
+[node name="Hand" type="TextureRect" parent="CenterContainer/Offset/VBoxContainer"]
 custom_minimum_size = Vector2(240, 240)
 layout_mode = 2
+mouse_filter = 2
 texture = ExtResource("2_30yds")
 stretch_mode = 5
 
-[node name="Prompt" type="Label" parent="CenterContainer/VBoxContainer"]
+[node name="Prompt" type="Label" parent="CenterContainer/Offset/VBoxContainer"]
 custom_minimum_size = Vector2(600, 0)
 layout_mode = 2
