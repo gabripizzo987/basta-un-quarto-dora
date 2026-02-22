@@ -777,7 +777,11 @@ func _show_room_summary() -> void:
 	var total: int = spawned_donors.size()
 	var errors_total: int = emocromo_errors.size()
 	var correct_first_try: int = total - _count_unique_donors_with_errors()
-
+	
+	RunState.mistakes_emocromo = errors_total
+	RunState.recompute_mistakes_total()
+	print("[EMOCROMO SAVE] emo=", RunState.mistakes_emocromo, " total=", RunState.mistakes_total)
+	
 	var title_label: Label = $SummaryLayer/SummaryPanel/Margin/VBox/Title
 	var body_label: Label  = $SummaryLayer/SummaryPanel/Margin/VBox/Body
 	var btn: Button        = $SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue

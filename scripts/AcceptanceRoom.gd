@@ -50,13 +50,11 @@ func _ready() -> void:
 	summary_dim.offset_right = 0
 	summary_dim.offset_bottom = 0
 
-	# blocca gioco all’avvio
 	player.set_physics_process(false)
 	player.set_process_input(false)
 	if player.has_method("face_up_idle"):
 		player.face_up_idle()
 
-	# intro
 	intro_layer.visible = true
 	intro_button.disabled = false
 	intro_button.pressed.connect(_on_intro_finished)
@@ -135,7 +133,6 @@ func _setup_tutorial_manual() -> void:
 	if tutorial_manual == null:
 		return
 
-	# fullscreen overlay
 	tutorial_manual.set_anchors_preset(Control.PRESET_FULL_RECT)
 	tutorial_manual.offset_left = 0
 	tutorial_manual.offset_top = 0
@@ -180,6 +177,8 @@ func _hide_intro_and_start() -> void:
 
 
 func _show_tutorial_manual_once() -> void:
+	if player.has_method("set_can_move"):
+		player.set_can_move(false)
 	if tutorial_manual == null:
 		return
 	if RunState.tutorial_manual_seen:
@@ -188,9 +187,8 @@ func _show_tutorial_manual_once() -> void:
 	RunState.tutorial_manual_seen = true
 
 	tutorial_manual.visible = true
-	tutorial_manual.mouse_filter = Control.MOUSE_FILTER_STOP
+	tutorial_manual.mouse_filter = Control.MOUSE_FILTER_STOP	
 
-	# anima freccia (su/giù)
 	if tutorial_manual_arrow:
 		if arrow_tween and arrow_tween.is_running():
 			arrow_tween.kill()
@@ -203,6 +201,11 @@ func _show_tutorial_manual_once() -> void:
 
 
 func _on_tutorial_manual_ok_pressed() -> void:
+	if player.has_method("set_can_move"):
+		player.set_can_move(true)
+	else:
+		player.set_physics_process(true)
+		player.set_process_input(true)
 	if arrow_tween and arrow_tween.is_running():
 		arrow_tween.kill()
 
@@ -273,11 +276,22 @@ func _on_all_donors_completed() -> void:
 	var correct: int = int(total - game_ui.donors_missed_first_try.size())
 	var mistakes: int = int(game_ui.mistakes_total)
 
+	# ✅ SYNC anti-doppio (idempotente)
+	RunState.mistakes_total -= RunState.mistakes_acceptance
+	RunState.mistakes_acceptance = mistakes
+	RunState.mistakes_total += RunState.mistakes_acceptance
+
+	print("[ACCEPTANCE] mistakes_room=", mistakes,
+		" acc_saved=", RunState.mistakes_acceptance,
+		" total_now=", RunState.mistakes_total)
+
 	player.set_physics_process(false)
 	player.set_process_input(false)
 
 	summary_title.text = "Stanza completata ✅"
-	summary_body.text = "Donatori gestiti correttamente: %d / %d\nErrori totali: %d" % [correct, total, mistakes]
+	summary_body.text = "Donatori gestiti correttamente: %d / %d\nErrori totali: %d" % [
+		correct, total, RunState.mistakes_total
+	]
 
 	summary_layer.visible = true
 	summary_panel.visible = true

@@ -543,7 +543,6 @@ Comportano una sospensione temporanea:
 👉 Dopo guarigione completa, il donatore può tornare idoneo."
 
 [node name="PagesRow4" type="HBoxContainer" parent="PanelManual"]
-visible = false
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 1
 anchors_preset = 15
@@ -582,13 +581,15 @@ bbcode_enabled = true
 text = "[color=#000000]Farmaci che richiedono sospensione: 
 [/color]
 • Antibiotici → sospensione almeno 14 giorni dalla fine della terapia
-• farmaci per infezioni recenti
+• farmaci per infezioni recenti (per esempio ibuprofene o paracetamolo)
 
 NON idoneità:
 
 • Terapia anticoagulante cronica"
 
 [node name="PagesRow5" type="HBoxContainer" parent="PanelManual"]
+visible = false
+texture_filter = 1
 custom_minimum_size = Vector2(0, 220)
 layout_mode = 1
 anchors_preset = 15
@@ -614,7 +615,7 @@ text = "[color=#000000]Tatuaggi e piercing[/color]
 
 Dopo tatuaggi o piercing:
 
-• sospensione di 6 mesi
+• sospensione di 4 mesi
 
 👉 Serve a prevenire il rischio di infezioni trasmissibili."
 

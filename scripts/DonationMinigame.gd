@@ -5,32 +5,43 @@ signal finished(success: bool)
 @export var duration_sec: float = 18.0
 @export var min_pump_events: int = 1
 @export var max_pump_events: int = 2
-@export var pump_window_sec: float = 4.5
+@export var pump_window_sec: float = 6.0
 
-# --- FILL / FLOW (bilanciato) ---
 @export var base_fill_per_sec: float = 100.0 / 18.0
 
 @export var min_flow_when_bad: float = 0.12
 @export var flow_decay_per_sec: float = 0.50
-@export var flow_recover_per_good_pump: float = 0.50
+@export var flow_recover_per_good_pump: float = 0.95
 @export var flow_smooth: float = 10.0
 
-@export var low_flow_threshold: float = 0.12
-@export var low_flow_fail_after: float = 2.4
-@export var pump_recover_threshold: float = 0.28
+@export var low_flow_threshold: float = 0.08
+@export var low_flow_fail_after: float = 4.2
+@export var pump_recover_threshold: float = 0.16
 
-# tagli (pixel su 1024)
 @export var bag_top_px: int = 200
 @export var bag_bottom_px: int = 650
 
-# offset UI (per “centrale e leggermente in basso”)
 @export var ui_offset_y: float = 80.0
 
 @export var DEBUG_PRINT_EVERY_SEC: bool = false
+@export var hold_recover_per_sec: float = 0.55
 
 # =============================
-# NODI (path tuoi)
+# PIXEL STYLE
 # =============================
+@export var pixel_font: FontFile
+@export var pixel_font_size: int = 22            # ⬅️ più grande di default
+@export var tutorial_title_size: int = 28        # ⬅️ più grande
+@export var tutorial_body_size: int = 22         # ⬅️ più grande
+
+# cursor/icon
+@export var custom_cursor: Texture2D
+@export var cursor_hotspot: Vector2 = Vector2(0, 0)
+@export var cursor_scale: float = 0.25           # ⬅️ riduce il mouse gigante (0.20–0.35 ok)
+
+const DEFAULT_PIXEL_FONT_PATH := "res://fonts/PixelOperator8.ttf"
+const DEFAULT_CURSOR_PATH := "res://assets/backgrounds/Spritesheets/Mouse.png"
+
 @onready var center: CenterContainer = $CenterContainer
 @onready var offset: MarginContainer = $CenterContainer/Offset
 @onready var vbox: VBoxContainer = $CenterContainer/Offset/VBoxContainer
@@ -45,9 +56,6 @@ signal finished(success: bool)
 @export var hand_open: Texture2D
 @export var hand_closed: Texture2D
 
-# =============================
-# STATO
-# =============================
 var t_total: float = 0.0
 var t_fill: float = 0.0
 var fill_percent: float = 0.0
@@ -65,6 +73,13 @@ var low_flow_time: float = 0.0
 
 var blood_mat: ShaderMaterial = null
 
+var _show_tutorial: bool = false
+var _tutorial_open: bool = false
+var _tutorial_root: Control = null
+
+# cache cursor scalato
+var _scaled_cursor: Texture2D = null
+
 
 func _ready() -> void:
 	if bag_stack == null or clip == null or blood_fill == null:
@@ -77,10 +92,16 @@ func _ready() -> void:
 		push_error("BloodFill.texture è NULL. Assegna la texture rossa (piena).")
 		return
 
-	_apply_hard_layout_fix()
+	# fallback risorse
+	_ensure_pixel_assets_loaded()
 
-	# ✅ FIX 1: applica offset DOPO che i container hanno calcolato il layout
+	_apply_hard_layout_fix()
 	call_deferred("_apply_ui_offset")
+
+	# pixel font su tutta la scena (incl. prompt)
+	_apply_pixel_font_recursive(self)
+
+	# IMPORTANT: NON settiamo il cursor qui (lo facciamo solo quando c’è flusso basso)
 
 	# input: non far mangiare click
 	mouse_filter = Control.MOUSE_FILTER_STOP
@@ -98,7 +119,6 @@ func _ready() -> void:
 		push_error("BloodFill.material non è ShaderMaterial: %s" % [m])
 		return
 
-	# cut params (TIPI ESPLICITI -> niente warning variant)
 	var tex_h: float = float(blood_fill.texture.get_size().y)
 	var cut_top: float = clamp(float(bag_top_px) / tex_h, 0.0, 1.0)
 	var cut_bottom: float = clamp(float(tex_h - bag_bottom_px) / tex_h, 0.0, 1.0)
@@ -127,23 +147,22 @@ func _ready() -> void:
 
 	_set_fill_shader(0.0)
 
+	if _show_tutorial:
+		_open_tutorial()
+
 
 func _apply_hard_layout_fix() -> void:
-	# root full rect
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	# center full rect
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	center.size_flags_vertical = Control.SIZE_EXPAND_FILL
 
-	# vbox non deve espandere: resta “compatta”
 	vbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 
-	# sacca 1024x1024
 	var target := Vector2(1024, 1024)
 	bag_stack.custom_minimum_size = target
 	clip.custom_minimum_size = target
@@ -155,8 +174,6 @@ func _apply_hard_layout_fix() -> void:
 
 
 func _apply_ui_offset() -> void:
-	# ✅ FIX 2: con MarginContainer il modo giusto è modificare i margini, non la position del vbox
-	# sposta in basso di ui_offset_y
 	offset.add_theme_constant_override("margin_top", int(ui_offset_y))
 
 
@@ -176,6 +193,9 @@ func _build_schedule() -> void:
 
 
 func _process(delta: float) -> void:
+	if _tutorial_open:
+		return
+
 	if DEBUG_PRINT_EVERY_SEC and int(t_total) != int(t_total - delta):
 		print("t_fill=", snappedf(t_fill, 0.1),
 			" t_total=", snappedf(t_total, 0.1),
@@ -200,7 +220,13 @@ func _process(delta: float) -> void:
 
 	if pump_active:
 		pump_time_left -= delta
+
+		# decay naturale del flusso quando è "basso"
 		flow = maxf(min_flow_when_bad, flow - flow_decay_per_sec * delta)
+
+		# ✅ NEW: se tieni premuto il sinistro, recuperi un po' ogni frame (più easy)
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			flow = clampf(flow + hold_recover_per_sec * delta, 0.0, 1.35)
 
 		prompt.text = ("Flusso basso — stringi e rilascia!" if flow < 0.30 else "Flusso OK")
 
@@ -227,6 +253,8 @@ func _process(delta: float) -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _tutorial_open:
+		return
 	if not pump_active:
 		return
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
@@ -241,6 +269,9 @@ func _start_pump() -> void:
 	prompt.visible = true
 	hand.visible = true
 
+	# ✅ mostra cursor SOLO quando c’è flusso basso (mano visibile)
+	_apply_custom_cursor(true)
+
 	want_closed = true
 	if hand_open != null:
 		hand.texture = hand_open
@@ -254,28 +285,17 @@ func _end_pump() -> void:
 	hand.visible = false
 	low_flow_time = 0.0
 
+	# ✅ torna al mouse normale
+	_apply_custom_cursor(false)
+
 
 func _handle_pump_click() -> void:
-	if hand_open == null or hand_closed == null:
-		flow = clampf(flow + 0.12, 0.0, 1.35)
-		return
+	# ogni click aiuta SEMPRE tanto
+	flow = clampf(flow + (flow_recover_per_good_pump * 0.70), 0.0, 1.35)
 
-	var is_open: bool = (hand.texture == hand_open)
-
-	if want_closed and is_open:
-		hand.texture = hand_closed
-		want_closed = false
-		flow = clampf(flow + flow_recover_per_good_pump, 0.0, 1.35)
-		return
-
-	if (not want_closed) and (not is_open):
-		hand.texture = hand_open
-		want_closed = true
-		flow = clampf(flow + flow_recover_per_good_pump, 0.0, 1.35)
-		return
-
-	flow = maxf(min_flow_when_bad, flow - 0.01)
-
+	# feedback visivo (toggle)
+	if hand_open != null and hand_closed != null:
+		hand.texture = hand_closed if (hand.texture == hand_open) else hand_open
 
 func _set_fill_shader(a: float) -> void:
 	if blood_mat == null:
@@ -289,5 +309,208 @@ func _finish(success: bool) -> void:
 		" t_total=", snappedf(t_total, 0.2),
 		" fill=", snappedf(fill_percent, 1))
 	set_process(false)
+
+	# safety: sempre ripristina cursor normale
+	_apply_custom_cursor(false)
+
 	finished.emit(success)
 	queue_free()
+
+
+func set_show_tutorial(v: bool) -> void:
+	_show_tutorial = v
+
+
+func _open_tutorial() -> void:
+	_tutorial_open = true
+
+	var root := Control.new()
+	root.name = "TutorialOverlay"
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
+	add_child(root)
+	_tutorial_root = root
+
+	var dimm := ColorRect.new()
+	dimm.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dimm.color = Color(0, 0, 0, 0.72)
+	root.add_child(dimm)
+
+	var center_box := CenterContainer.new()
+	center_box.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(center_box)
+
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(680, 300) # ⬅️ un pelo più grande
+	center_box.add_child(panel)
+
+	# ✅ PANEL COLOR #D56FFF
+	# ✅ PANEL STYLE come gli altri (dark + bordo + rounded)
+	var sb := StyleBoxFlat.new()
+	sb.bg_color = Color.html("#1E1E26")     # scuro
+	sb.bg_color.a = 0.96
+	sb.border_color = Color.html("#5E5E73") # bordo soft
+	sb.border_width_left = 2
+	sb.border_width_right = 2
+	sb.border_width_top = 2
+	sb.border_width_bottom = 2
+	sb.corner_radius_top_left = 18
+	sb.corner_radius_top_right = 18
+	sb.corner_radius_bottom_left = 18
+	sb.corner_radius_bottom_right = 18
+	panel.add_theme_stylebox_override("panel", sb)
+
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 18)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 14)
+	margin.add_theme_constant_override("margin_bottom", 14)
+	panel.add_child(margin)
+
+	var vb := VBoxContainer.new()
+	vb.add_theme_constant_override("separation", 10)
+	margin.add_child(vb)
+
+	var title := Label.new()
+	title.text = "Tutorial — Donazione"
+	title.add_theme_font_size_override("font_size", tutorial_title_size)
+	vb.add_child(title)
+
+	# bullets
+	var b1 := Label.new()
+	b1.text = "• La sacca si riempie nel tempo."
+	b1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b1.add_theme_font_size_override("font_size", tutorial_body_size)
+	vb.add_child(b1)
+
+	# ✅ riga con icona mouse INLINE vicino a “(ripetutamente)”
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	vb.add_child(row)
+
+	var lpre := Label.new()
+	lpre.text = "• Quando compare la mano: CLIC sinistro"
+	lpre.add_theme_font_size_override("font_size", tutorial_body_size)
+	row.add_child(lpre)
+
+	var icon := TextureRect.new()
+	icon.texture = _get_scaled_cursor_for_icon()
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(24, 24)  # ⬅️ iconcina piccola
+	row.add_child(icon)
+
+	var lpost := Label.new()
+	lpost.text = "(ripetutamente)"
+	lpost.add_theme_font_size_override("font_size", tutorial_body_size)
+	row.add_child(lpost)
+
+	var b3 := Label.new()
+	b3.text = "• Se reagisci troppo tardi, la donazione fallisce."
+	b3.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	b3.add_theme_font_size_override("font_size", tutorial_body_size)
+	vb.add_child(b3)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, 6)
+	vb.add_child(spacer)
+
+	var hint := Label.new()
+	hint.text = "Premi \"Inizia\" per partire."
+	hint.add_theme_font_size_override("font_size", tutorial_body_size)
+	vb.add_child(hint)
+
+	var btn := Button.new()
+	btn.text = "Inizia"
+	btn.custom_minimum_size = Vector2(180, 46)
+	vb.add_child(btn)
+
+	btn.pressed.connect(_close_tutorial)
+
+	# pixel font anche ai nodi runtime
+	_apply_pixel_font_recursive(root)
+
+	get_viewport().gui_release_focus()
+	btn.grab_focus()
+
+
+func _close_tutorial() -> void:
+	_tutorial_open = false
+	if is_instance_valid(_tutorial_root):
+		_tutorial_root.queue_free()
+	_tutorial_root = null
+	get_viewport().gui_release_focus()
+
+
+# =============================
+# PIXEL HELPERS
+# =============================
+func _ensure_pixel_assets_loaded() -> void:
+	if pixel_font == null and ResourceLoader.exists(DEFAULT_PIXEL_FONT_PATH):
+		var f := load(DEFAULT_PIXEL_FONT_PATH)
+		if f is FontFile:
+			pixel_font = f as FontFile
+
+	if custom_cursor == null and ResourceLoader.exists(DEFAULT_CURSOR_PATH):
+		var t := load(DEFAULT_CURSOR_PATH)
+		if t is Texture2D:
+			custom_cursor = t as Texture2D
+
+
+func _apply_pixel_font_recursive(n: Node) -> void:
+	if pixel_font == null:
+		return
+
+	if n is Control:
+		var c := n as Control
+		c.add_theme_font_override("font", pixel_font)
+		c.add_theme_font_size_override("font_size", pixel_font_size)
+
+	for ch in n.get_children():
+		_apply_pixel_font_recursive(ch)
+
+
+func _apply_custom_cursor(enable: bool) -> void:
+	if custom_cursor == null:
+		return
+
+	if enable:
+		var tex := _get_scaled_cursor()
+		Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, cursor_hotspot)
+		Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, cursor_hotspot)
+		Input.set_custom_mouse_cursor(tex, Input.CURSOR_IBEAM, cursor_hotspot)
+	else:
+		Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW)
+		Input.set_custom_mouse_cursor(null, Input.CURSOR_POINTING_HAND)
+		Input.set_custom_mouse_cursor(null, Input.CURSOR_IBEAM)
+
+
+func _get_scaled_cursor() -> Texture2D:
+	if _scaled_cursor != null:
+		return _scaled_cursor
+	_scaled_cursor = _make_scaled_texture(custom_cursor, cursor_scale)
+	return _scaled_cursor
+
+
+func _get_scaled_cursor_for_icon() -> Texture2D:
+	# per la iconcina nel tutorial va bene anche lo stesso cursor scalato
+	return _get_scaled_cursor()
+
+
+func _make_scaled_texture(src: Texture2D, scale_f: float) -> Texture2D:
+	if src == null:
+		return null
+	scale_f = clampf(scale_f, 0.05, 1.0)
+
+	var img := src.get_image()
+	if img == null:
+		return src
+
+	var w := maxi(1, int(img.get_width() * scale_f))
+	var h := maxi(1, int(img.get_height() * scale_f))
+
+	# resize con nearest per pixel art
+	img.resize(w, h, Image.INTERPOLATE_NEAREST)
+
+	var tex := ImageTexture.create_from_image(img)
+	return tex

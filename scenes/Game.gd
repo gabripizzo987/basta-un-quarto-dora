@@ -1,10 +1,18 @@
 extends Control
 
+@export var popup_max_size := Vector2(720, 260)  # adatta a gusto
+@export var popup_min_font_size := 10
+@export var popup_max_font_size := 18
+
 signal all_donors_completed
 
 var triage_active := false
 var mistakes_total: int = 0
 var donors_missed_first_try: Array[int] = []  # slot_index dei donatori sbagliati almeno una volta
+
+var _popup_top_layer: CanvasLayer = null
+var _popup_original_parent: Node = null
+var _popup_original_index: int = -1
 
 var rng = RandomNumberGenerator.new()
 
@@ -97,7 +105,14 @@ func _ready() -> void:
 	panel_accept.visible = false
 
 	error_popup.visible = false
-	error_ok.pressed.connect(Callable(self, "_on_error_ok_pressed"))
+	
+	error_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	# ✅ la label NON deve mangiarsi i click sopra l’OK
+	error_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+	# ✅ connetti al metodo GIUSTO (tu hai _on_button_ok_pressed)
+	if error_ok and not error_ok.pressed.is_connected(Callable(self, "_on_button_ok_pressed")):
+		error_ok.pressed.connect(Callable(self, "_on_button_ok_pressed"))
 
 # chiamata dall'esterno quando parli col donatore i
 func start_triage_for_slot(slot_index: int) -> void:
@@ -242,7 +257,7 @@ func generate_random_donor(must_be_eligible: bool, slot_cfg: Dictionary) -> Dict
 
 	var weight
 	if must_be_eligible:
-		weight = rng.randi_range(55, 100) # sopra soglia
+		weight = rng.randi_range(55, 100)
 	else:
 		weight = rng.randi_range(45, 100)
 
@@ -251,7 +266,7 @@ func generate_random_donor(must_be_eligible: bool, slot_cfg: Dictionary) -> Dict
 	var tattoo_months_ago = -1
 	if has_tattoo:
 		if must_be_eligible:
-			tattoo_months_ago = rng.randi_range(6, 24) # oltre 6 mesi
+			tattoo_months_ago = rng.randi_range(4, 24) 
 		else:
 			tattoo_months_ago = rng.randi_range(0, 24)
 
@@ -368,7 +383,7 @@ func is_donor_eligible(donor: Dictionary) -> bool:
 	if donor["weight"] < 50:
 		return false
 
-	if donor["has_tattoo"] and donor["tattoo_months_ago"] < 6:
+	if donor["has_tattoo"] and donor["tattoo_months_ago"] < 4:
 		return false
 
 	var disease_deferral = donor["disease"]["deferral"]
@@ -444,9 +459,11 @@ func _finish_current_donor() -> void:
 	if _all_donors_done():
 		RunState.donors = donors.duplicate(true)
 		RunState.donors_for_donation = donors_for_donation.duplicate()
-		RunState.mistakes_total = mistakes_total
+		RunState.mistakes_acceptance = mistakes_total
 		RunState.donors_missed_first_try = donors_missed_first_try.duplicate()
+		RunState.recompute_mistakes_total()
 		
+		print("[ACCEPTANCE SAVE] acc=", RunState.mistakes_acceptance, " total=", RunState.mistakes_total)
 		print("RUNSTATE SAVED:")
 		print("donors:", RunState.donors.size())
 		print("eligible:", RunState.donors_for_donation)
@@ -509,7 +526,8 @@ func handle_choice(accepted: bool) -> bool:
 		show_error_popup("Il donatore rispettava i criteri minimi di idoneità: dovevi ACCETTARE.")
 	elif not eligible and accepted:
 		label_feedback.text = "Errore: %s non è idoneo." % donor["name"]
-		show_error_popup(get_ineligibility_reason(donor))
+		var reasons := get_ineligibility_reasons(donor)
+		show_error_popup_many(reasons)
 
 	# SBLOCCA: può riprovare
 	decision_locked = false
@@ -590,23 +608,35 @@ func _on_button_close_manual_pressed() -> void:
 
 func _on_button_ok_pressed() -> void:
 	error_popup.visible = false
+	_restore_popup_parent()
 	emit_signal("error_popup_closed")
 
 func show_error_popup(reason: String) -> void:
+	_ensure_popup_on_top() 
 	error_popup.visible = true
-	error_text.text = "Motivo:\n%s" % reason
 
+	# ✅ sempre sopra tutto
+	error_popup.z_as_relative = false
+	error_popup.z_index = 99999
+	error_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	error_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	error_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	error_text.text = "Motivo:\n%s" % reason
+	_fit_error_popup_text_label()
+
+	# ⚠️ importantissimo: se il popup sta su una CanvasLayer più bassa, portalo davanti
 	if error_popup is Control:
 		(error_popup as Control).move_to_front()
 
 	emit_signal("error_popup_opened")
 
-	var ok_btn := error_popup.get_node("Margin/VBox/ButtonsRow/ButtonOk") as Button
-	if ok_btn:
-		ok_btn.disabled = false
-		ok_btn.mouse_filter = Control.MOUSE_FILTER_STOP
-		ok_btn.focus_mode = Control.FOCUS_ALL
-		ok_btn.grab_focus()
+	# ok sempre cliccabile e focus
+	if error_ok:
+		error_ok.disabled = false
+		error_ok.mouse_filter = Control.MOUSE_FILTER_STOP
+		error_ok.focus_mode = Control.FOCUS_ALL
+		error_ok.grab_focus()
 
 
 func open_for_donor_index(index: int, player: Node) -> void:
@@ -644,3 +674,158 @@ func get_current_donor_node() -> Node2D:
 	
 func is_error_popup_open() -> bool:
 	return error_popup.visible
+	
+func show_error_popup_many(reasons: Array[String]) -> void:
+	_ensure_popup_on_top()
+	error_popup.visible = true
+
+	# ✅ sempre sopra tutto
+	error_popup.z_as_relative = false
+	error_popup.z_index = 99999
+	error_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+
+	error_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	error_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	error_text.text = "Motivi:\n• " + "\n• ".join(reasons)
+	_fit_error_popup_text_label()
+
+	if error_popup is Control:
+		(error_popup as Control).move_to_front()
+
+	emit_signal("error_popup_opened")
+
+	if error_ok:
+		error_ok.disabled = false
+		error_ok.mouse_filter = Control.MOUSE_FILTER_STOP
+		error_ok.focus_mode = Control.FOCUS_ALL
+		error_ok.grab_focus()
+
+func get_ineligibility_reasons(donor: Dictionary) -> Array[String]:
+	var reasons: Array[String] = []
+
+	if donor["age"] < 18:
+		reasons.append("Età inferiore a 18 anni.")
+
+	if donor["weight"] < 50:
+		reasons.append("Peso inferiore a 50 kg.")
+
+	# ✅ tattoo/piercing: 4 mesi
+	if donor["has_tattoo"] and donor["tattoo_months_ago"] < 4:
+		reasons.append("Tatuaggio/Piercing eseguito da meno di 4 mesi.")
+
+	var disease_deferral = donor["disease"]["deferral"]
+	if disease_deferral == "perm":
+		reasons.append("Patologia che controindica in modo permanente la donazione (%s)." % donor["disease"]["label"])
+	elif disease_deferral == "temp":
+		reasons.append("Condizione temporanea: oggi il donatore va rimandato (%s)." % donor["disease"]["label"])
+
+	var drug_deferral = donor["drug"]["deferral"]
+	if drug_deferral == "perm":
+		reasons.append("Terapia farmacologica che controindica la donazione (%s)." % donor["drug"]["label"])
+	elif drug_deferral == "temp":
+		reasons.append("Farmaco assunto di recente: il donatore va rimandato oggi (%s)." % donor["drug"]["label"])
+
+	if donor["recent_travel_risk"]:
+		reasons.append("Viaggio recente in zona a rischio malaria/dengue: il donatore va temporaneamente sospeso.")
+
+	if not donor["first_time"] and donor["last_donation_months_ago"] < 3:
+		reasons.append("Ultima donazione troppo recente: devono passare almeno 3 mesi.")
+
+	# fallback (ma solo se davvero non hai trovato niente)
+	if reasons.is_empty():
+		reasons.append("Non idoneo per motivi clinici (semplificati).")
+
+	return reasons
+
+func _ensure_popup_on_top() -> void:
+	if error_popup == null:
+		return
+
+	# crea una volta un CanvasLayer sopra a TUTTO
+	if _popup_top_layer == null:
+		_popup_top_layer = CanvasLayer.new()
+		_popup_top_layer.name = "PopupTopLayer"
+		_popup_top_layer.layer = 999  # sopra quasi tutto
+		get_tree().current_scene.add_child(_popup_top_layer)
+
+	# se non è già nel top layer, spostalo
+	if error_popup.get_parent() != _popup_top_layer:
+		_popup_original_parent = error_popup.get_parent()
+		_popup_original_index = error_popup.get_index()
+
+		_popup_original_parent.remove_child(error_popup)
+		_popup_top_layer.add_child(error_popup)
+
+	# input settings per sicurezza
+	error_popup.mouse_filter = Control.MOUSE_FILTER_STOP
+	error_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+
+
+func _restore_popup_parent() -> void:
+	if error_popup == null:
+		return
+	if _popup_original_parent == null:
+		return
+	if error_popup.get_parent() == _popup_original_parent:
+		return
+
+	error_popup.get_parent().remove_child(error_popup)
+	_popup_original_parent.add_child(error_popup)
+
+	# rimetti la posizione nell’albero (così non cambia layout)
+	if _popup_original_index >= 0 and _popup_original_index < _popup_original_parent.get_child_count():
+		_popup_original_parent.move_child(error_popup, _popup_original_index)
+
+func _fit_error_popup_text_label() -> void:
+	if error_popup == null or error_text == null:
+		return
+
+	# inchioda dimensione popup
+	var c := error_popup as Control
+	c.custom_minimum_size = popup_max_size
+	c.size = popup_max_size
+
+	error_text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+	# area disponibile per la label (se è in VBox, usa la sua size attuale)
+	await get_tree().process_frame
+
+	var font: Font = error_text.get_theme_font("font")
+	var box_w = error_text.size.x
+	var box_h = error_text.size.y
+
+	# prova a scendere di font finché ci sta
+	for fs in range(popup_max_font_size, popup_min_font_size - 1, -1):
+		error_text.add_theme_font_size_override("font_size", fs)
+		await get_tree().process_frame
+
+		var line_h := font.get_height(fs) + 2
+		var max_lines := int(floor(box_h / line_h))
+
+		# stima righe con word-wrap “approx”: conta quante righe servono spezzando per parole
+		var needed := _estimate_wrapped_lines(error_text.text, font, fs, box_w)
+
+		if needed <= max_lines:
+			return
+			
+func _estimate_wrapped_lines(txt: String, font: Font, fs: int, max_w: float) -> int:
+	var lines := txt.split("\n")
+	var total := 0
+
+	for raw in lines:
+		var words := raw.split(" ", false)
+		if words.is_empty():
+			total += 1
+			continue
+
+		var cur := ""
+		for w in words:
+			var test := (cur if cur != "" else "") + ("" if cur == "" else " ") + w
+			if font.get_string_size(test, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x <= max_w:
+				cur = test
+			else:
+				total += 1
+				cur = w
+		total += 1
+
+	return total

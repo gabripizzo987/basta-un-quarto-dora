@@ -1,6 +1,98 @@
-[gd_scene load_steps=2 format=3 uid="uid://cxw474y0t7gt5"]
+[gd_scene load_steps=21 format=3 uid="uid://cxw474y0t7gt5"]
 
 [ext_resource type="Script" uid="uid://cds4k2njwkejx" path="res://scripts/MainMenu.gd" id="1_isws5"]
+[ext_resource type="Script" uid="uid://hy4h54fpsme6" path="res://scripts/PanelManual.gd" id="2_qmweu"]
+[ext_resource type="Texture2D" uid="uid://bk5jewqoslqw6" path="res://assets/ui/book_middle (1).png" id="3_f1mbi"]
+[ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="4_oitky"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wckin"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_arvcj"]
+bg_color = Color(0.125426, 0.14297, 0.191205, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6k0m2"]
+bg_color = Color(0.0941176, 0.105882, 0.14902, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qq55g"]
+bg_color = Color(0.105882, 0.121569, 0.164706, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pkvjm"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6gdku"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tdscb"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1enlb"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2c0k1"]
+bg_color = Color(0.12549, 0.141176, 0.192157, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ifx2v"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4ei73"]
+bg_color = Color(0.09302, 0.105937, 0.147936, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bo2hs"]
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ebnwy"]
+bg_color = Color(0.105882, 0.121569, 0.164706, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_d7vcc"]
+bg_color = Color(0.365323, 0.141935, 0.0491849, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hpv8s"]
+bg_color = Color(0.646764, 0.191311, 0.149225, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_nsjqy"]
+bg_color = Color(0.164706, 0.105882, 0.105882, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -39,4 +131,369 @@ grow_horizontal = 2
 grow_vertical = 2
 text = "Inizia"
 
+[node name="BtnGruppi" type="Button" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -68.0
+offset_top = 56.0
+offset_right = 72.0
+offset_bottom = 87.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "Gruppi sanguigni"
+
+[node name="PanelManual" type="Control" parent="."]
+custom_minimum_size = Vector2(800, 500)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -491.0
+offset_top = -243.0
+offset_right = 509.0
+offset_bottom = 357.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_qmweu")
+
+[node name="BookBG" type="TextureRect" parent="PanelManual"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("3_f1mbi")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LabelTitle" type="Label" parent="PanelManual"]
+texture_filter = 1
+layout_mode = 0
+offset_left = 238.0
+offset_top = 72.0
+offset_right = 464.0
+offset_bottom = 95.0
+theme_override_colors/font_color = Color(0.352558, 0.000149735, 0.382259, 1)
+theme_override_fonts/font = ExtResource("4_oitky")
+text = "Gruppi sanguigni"
+
+[node name="HBoxNav" type="HBoxContainer" parent="PanelManual"]
+layout_mode = 0
+offset_left = 416.0
+offset_top = 10.0
+offset_right = 585.0
+offset_bottom = 50.0
+
+[node name="ButtonPrev" type="Button" parent="PanelManual/HBoxNav"]
+custom_minimum_size = Vector2(40, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_styles/disabled = SubResource("StyleBoxFlat_wckin")
+theme_override_styles/hover = SubResource("StyleBoxFlat_arvcj")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_6k0m2")
+theme_override_styles/normal = SubResource("StyleBoxFlat_qq55g")
+text = "◀"
+
+[node name="LabelPage" type="Label" parent="PanelManual/HBoxNav"]
+texture_filter = 1
+layout_mode = 2
+theme_override_colors/font_color = Color(0.94902, 0.94902, 0.94902, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.501961)
+theme_override_colors/font_outline_color = Color(0.0214346, 0.0214346, 0.0214346, 1)
+theme_override_fonts/font = ExtResource("4_oitky")
+text = "Pagina 1/1"
+
+[node name="ButtonNext" type="Button" parent="PanelManual/HBoxNav"]
+custom_minimum_size = Vector2(40, 32)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_styles/disabled = SubResource("StyleBoxFlat_pkvjm")
+theme_override_styles/hover_pressed_mirrored = SubResource("StyleBoxFlat_6gdku")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_tdscb")
+theme_override_styles/hover_mirrored = SubResource("StyleBoxFlat_1enlb")
+theme_override_styles/hover = SubResource("StyleBoxFlat_2c0k1")
+theme_override_styles/pressed_mirrored = SubResource("StyleBoxFlat_ifx2v")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4ei73")
+theme_override_styles/normal_mirrored = SubResource("StyleBoxFlat_bo2hs")
+theme_override_styles/normal = SubResource("StyleBoxFlat_ebnwy")
+text = "▶"
+
+[node name="PagesRow" type="HBoxContainer" parent="PanelManual"]
+visible = false
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "
+[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]GRUPPI SANGUIGNI: AB0[/font]
+
+Il gruppo sanguigno dipende dagli antigeni presenti sui globuli rossi.
+
+• Se hai antigene A → gruppo A
+• Se hai antigene B → gruppo B
+• Se hai A e B → gruppo AB
+• Se non hai né A né B → gruppo 0
+"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+bbcode_enabled = true
+text = "Il corpo produce anticorpi contro gli antigeni che non possiede:
+• A → anticorpi anti-B
+• B → anticorpi anti-A
+• AB → nessun anti-A/anti-B
+• 0 → anti-A e anti-B"
+
+[node name="PagesRow2" type="HBoxContainer" parent="PanelManual"]
+visible = false
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow2"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]FATTORE Rh (positivo/negativo)[/font]
+
+Oltre ad AB0 esiste il fattore Rh, legato  all’antigene D.
+
+• Rh+: antigene D presente
+• Rh−: antigene D assente
+
+
+• Chi è Rh− può ricevere solo Rh−
+• Chi è Rh+ può ricevere Rh+ o Rh−
+
+"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow2"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "👉 AB0 + Rh insieme formano: A+, A−, B+, B−, AB+, AB−, 0+, 0−."
+
+[node name="PagesRow3" type="HBoxContainer" parent="PanelManual"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow3"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]COMPATIBILITÀ: DONARE GLOBULI ROSSI[/font] [/color]
+
+Quando si parla di “chi dona a chi”, spesso si intende: donazione di globuli rossi (emazie).
+
+Regole chiave:
+• 0− → può donare a tutti (donatore universale)
+• AB+ → può ricevere da tutti (ricevente universale)
+
+"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow3"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "Compatibilità AB0 (emazie):
+• 0 dona a: 0, A, B, AB
+• A dona a: A, AB
+• B dona a: B, AB
+• AB dona a: AB (solo)"
+
+[node name="PagesRow4" type="HBoxContainer" parent="PanelManual"]
+visible = false
+texture_filter = 1
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow4"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]CHI PUÒ RICEVERE (GLOBULI ROSSI)[/font] [/color]
+
+Compatibilità AB0 (ricezione emazie):
+• 0 riceve da: 0
+• A riceve da: A, 0
+• B riceve da: B, 0
+• AB riceve da: AB, A, B, 0
+
+Con Rh:
+• se sei Rh−, ricevi solo Rh−
+• se sei Rh+, puoi ricevere Rh+ e Rh−
+
+Esempio:
+• A− riceve: A−, 0−
+• A+ riceve: A+, A−, 0+, 0−"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow4"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]ATTENZIONE: PLASMA ≠ GLOBULI ROSSI[/font] [/color]
+Per il plasma le compatibilità spesso si “invertono” rispetto ai globuli rossi.
+
+"
+
+[node name="PagesRow5" type="HBoxContainer" parent="PanelManual"]
+texture_filter = 1
+custom_minimum_size = Vector2(0, 220)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 228.0
+offset_top = 93.0
+offset_right = -32.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 50
+
+[node name="RichLeft" type="RichTextLabel" parent="PanelManual/PagesRow5"]
+texture_filter = 1
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "Idea generale:
+• La compatibilità nelle trasfusioni di plasma avviene in base alla presenza di ab nella sacca, correlati al gruppo sanguigno.
+• Il plasma AB è spesso considerato “universale” perché non contiene anti-A/anti-B.
+• Il plasma 0 contiene anti-A e anti-B, quindi è più “selettivo”.
+
+(Nei centri trasfusionali la compatibilità viene sempre controllata con precisione.)"
+
+[node name="RichRight" type="RichTextLabel" parent="PanelManual/PagesRow5"]
+texture_filter = 1
+custom_minimum_size = Vector2(240, -10)
+layout_mode = 2
+theme_override_colors/default_color = Color(0.184314, 0.145098, 0.0941176, 1)
+theme_override_fonts/normal_font = ExtResource("4_oitky")
+theme_override_font_sizes/normal_font_size = 16
+bbcode_enabled = true
+text = "[color=#2B2116][font=res://fonts/PixelOperator8-Bold.ttf]PERCHÉ CONTA CONOSCERLO[/font] [/color]
+Conoscere il proprio gruppo serve per:
+• sicurezza in caso di trasfusioni
+• gestione corretta delle donazioni
+• emergenze (scelta rapida del sangue compatibile)
+✅ Ricorda:
+• 0− = donatore universale (globuli rossi)
+• AB+ = ricevente universale (globuli rossi)
+• Rh− è più “delicato” in ricezione.
+"
+
+[node name="ButtonCloseManual" type="Button" parent="PanelManual"]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -225.0
+offset_top = -51.0
+offset_right = -167.0
+offset_bottom = -20.0
+grow_horizontal = 0
+grow_vertical = 0
+theme_override_fonts/font = ExtResource("4_oitky")
+theme_override_styles/hover = SubResource("StyleBoxFlat_d7vcc")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_hpv8s")
+theme_override_styles/normal = SubResource("StyleBoxFlat_nsjqy")
+text = "Chiudi
+"
+
+[node name="Control" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
 [connection signal="pressed" from="Button" to="." method="_on_button_pressed"]
+[connection signal="pressed" from="BtnGruppi" to="." method="_on_btn_gruppi_pressed"]
