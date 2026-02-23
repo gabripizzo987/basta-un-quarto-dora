@@ -47,6 +47,9 @@ var spawned_donors: Array[Node] = []
 var forced_eligible_ids: Array[int] = []
 var rng := RandomNumberGenerator.new()
 
+const TEX_NEEDLE_BADGE := preload("res://assets/ui/badges/precisione_ago.png")
+var _needle_badge_icon: TextureRect = null
+var _top_icons_row: HBoxContainer = null
 
 func _ready() -> void:
 	$UI.hide()
@@ -504,6 +507,9 @@ func _on_blood_minigame_done(result: String) -> void:
 			)
 
 		"borderline", "fail":
+			var id := int(donor.get("id", -1))
+			if id != -1 and not RunState.donors_needle_missed_first_try.has(id):
+				RunState.donors_needle_missed_first_try.append(id)
 			# ✅ ORA borderline è trattato come fallimento: deve riprovare
 			has_blood_sample = false
 			analysis_done = false
@@ -790,7 +796,10 @@ func _show_room_summary() -> void:
 	var title_label: Label = $SummaryLayer/SummaryPanel/Margin/VBox/Title
 	var body_label: Label  = $SummaryLayer/SummaryPanel/Margin/VBox/Body
 	var btn: Button        = $SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue
-
+	
+# Badge Precisione Ago: SOLO se nessuno ha sbagliato prelievo al primo tentativo
+	RunState.badge_precisione_ago = (RunState.donors_needle_missed_first_try.size() == 0 and spawned_donors.size() > 0)
+	
 	title_label.text = "Stanza completata ✅"
 	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d" % [
 		correct_first_try, total, errors_total

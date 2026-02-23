@@ -16,7 +16,6 @@ extends Node2D
 @onready var intro_body: Label       = $UI/IntroLayer/OverlayRoot/IntroPanel/Margin/VBox/Body
 @onready var intro_btn: Button       = $UI/IntroLayer/OverlayRoot/IntroPanel/Margin/VBox/ButtonsRow/Intro
 
-
 @export var DEBUG_FINAL: bool = true
 
 var spawned_final_donors: Array = []
@@ -29,9 +28,16 @@ var _locks: int = 0
 var _medal_icon: TextureRect = null
 var fail_popup: Control = null
 
+# ✅ NUOVO: riga icone + icona badge
+var _top_icons_row: HBoxContainer = null
+var _needle_badge_icon: TextureRect = null
+
 const TEX_GOLD   := preload("res://assets/ui/medals/bag_gold.png")
 const TEX_SILVER := preload("res://assets/ui/medals/bag_silver.png")
 const TEX_BRONZE := preload("res://assets/ui/medals/bag_bronze.png")
+
+# ✅ Badge Precisione Ago (usa lo stesso path che hai in EmocromoRoom)
+const TEX_NEEDLE_BADGE := preload("res://assets/ui/badges/precisione_ago.png")
 
 
 func _ready() -> void:
@@ -157,17 +163,17 @@ func start_donation_for(donor_id: int) -> void:
 		else:
 			if not RunState.donation_failed_ids.has(donor_id):
 				RunState.donation_failed_ids.append(donor_id)
-				
+
 			RunState.mistakes_final = RunState.donation_failed_ids.size()
 			RunState.recompute_mistakes_total()
 
 		_mark_donor_done_in_scene(donor_id)
 		donation_running = false
-		
+
 		if not success:
 			_show_fail_popup_like_summary("Dovevi premere il tasto sinistro più velocemente.\nLa prossima volta cerca di essere più veloce 💉")
 			return
-	# ✅ se successo: sblocca e continua flow normale
+
 		_unlock_player()
 		_try_finish_room()
 	)
@@ -238,16 +244,15 @@ func _show_summary() -> void:
 	intro_open = false
 	summary_open = true
 	_lock_player()
-	
+
 	RunState.mistakes_final = RunState.donation_failed_ids.size()
 	RunState.recompute_mistakes_total()
-	
+
 	var ok := RunState.donation_completed_ids.size()
 	var fail := RunState.donation_failed_ids.size()
 	var total := RunState.donors_for_final.size()
 	var errors := int(RunState.mistakes_total)
 
-	# blocca interazioni
 	for d in spawned_final_donors:
 		if is_instance_valid(d) and d.has_method("set_interaction_enabled"):
 			d.set_interaction_enabled(false)
@@ -257,8 +262,10 @@ func _show_summary() -> void:
 	dim.visible = true
 	intro_panel.visible = true
 
-	# --- MEDAGLIA ---
+	# --- ICONE TOP: MEDAGLIA + BADGE AGO ---
 	_ensure_medal_icon()
+	if is_instance_valid(_needle_badge_icon):
+		_needle_badge_icon.visible = bool(RunState.badge_precisione_ago)
 
 	var medal_name := "BRONZO"
 	var medal_tex: Texture2D = TEX_BRONZE
@@ -275,13 +282,19 @@ func _show_summary() -> void:
 
 	if is_instance_valid(_medal_icon):
 		_medal_icon.texture = medal_tex
-		_medal_icon.custom_minimum_size = Vector2(140, 140) # ✅ ancora più grande se vuoi
+		_medal_icon.custom_minimum_size = Vector2(140, 140)
 		_medal_icon.modulate = Color(1,1,1,1)
 
-	# --- TESTI ---
+	var needle_line := ""
+	if RunState.badge_precisione_ago:
+		needle_line = "🏅 Precisione Ago: PERFETTA — tutti i prelievi al primo tentativo!\n"
+	else:
+		needle_line = "🏅 Precisione Ago: mancata — riprova e punta alla perfezione!\n"
+		
 	intro_title.text = "Stanza completata ✅"
 	intro_body.text = \
 		"Medaglia: %s 🏅\n\n" % medal_name + \
+		needle_line + "\n" + \
 		"Donazioni completate: %d / %d\n" % [ok, total] + \
 		"Donazioni fallite: %d\n" % fail + \
 		"Errori totali: %d\n\n" % errors + \
@@ -289,14 +302,13 @@ func _show_summary() -> void:
 
 	intro_btn.text = "Fine"
 
-	# 🔥 Pulisce TUTTE le connessioni precedenti
 	for c in intro_btn.pressed.get_connections():
 		intro_btn.pressed.disconnect(c.callable)
 
 	intro_btn.pressed.connect(_on_summary_pressed)
 
-	# ✅ FIX layout (wrap + pannello)
 	call_deferred("_fit_panel_to_text")
+
 
 func _on_summary_pressed() -> void:
 	print("END GAME / BACK TO MENU")
@@ -353,51 +365,51 @@ func _unlock_player() -> void:
 		_locked_player.set_can_move(true)
 		_locked_player = null
 
-func _medal_data_for_errors(err: int) -> Dictionary:
-
-	if err <= 0:
-		return {
-			"label": "Medaglia d’ORO 🏅",
-			"tex": "res://assets/ui/medals/bag_gold.png",
-			"msg": "Perfetto! Hai gestito tutto al meglio: ogni donazione conta davvero. Continua così 💛"
-		}
-	elif err <= 3:
-		return {
-			"label": "Medaglia d’ARGENTO 🥈",
-			"tex": "res://assets/ui/medals/bag_silver.png",
-			"msg": "Ottimo lavoro! Qualche imprevisto capita: l’importante è esserci e migliorare. Grazie per il tuo impegno 🤍"
-		}
-	else:
-		return {
-			"label": "Medaglia di BRONZO 🥉",
-			"tex": "res://assets/ui/medals/bag_bronze.png",
-			"msg": "Non mollare! Anche i piccoli passi salvano vite: riprova con calma e diventerai super bravo 🤎"
-		}
-
 
 func _ensure_medal_icon() -> void:
-	if is_instance_valid(_medal_icon):
-		return
-
-	# VBox dove stanno Title/Body/ButtonsRow
 	var vbox := $UI/IntroLayer/OverlayRoot/IntroPanel/Margin/VBox as VBoxContainer
 	if vbox == null:
 		push_warning("[FINALROOM] VBox non trovato per MedalIcon")
 		return
 
-	var icon := TextureRect.new()
-	icon.name = "MedalIcon"
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(120, 120) # ✅ grande
-	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	# ✅ riga icone top
+	if not is_instance_valid(_top_icons_row):
+		var row := HBoxContainer.new()
+		row.name = "TopIcons"
+		row.add_theme_constant_override("separation", 14)
+		row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		row.alignment = BoxContainer.ALIGNMENT_CENTER
+		row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# mettila in cima (indice 0)
-	vbox.add_child(icon)
-	vbox.move_child(icon, 0)
+		vbox.add_child(row)
+		vbox.move_child(row, 0)
+		_top_icons_row = row
 
-	_medal_icon = icon
+	# ✅ medaglia
+	if not is_instance_valid(_medal_icon):
+		var icon := TextureRect.new()
+		icon.name = "MedalIcon"
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(140, 140)
+		icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		_top_icons_row.add_child(icon)
+		_medal_icon = icon
+
+	# ✅ badge ago
+	if not is_instance_valid(_needle_badge_icon):
+		var b := TextureRect.new()
+		b.name = "NeedleBadgeIcon"
+		b.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		b.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		b.custom_minimum_size = Vector2(120, 120)
+		b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		b.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		b.texture = TEX_NEEDLE_BADGE
+		b.visible = false
+		_top_icons_row.add_child(b)
+		_needle_badge_icon = b
 
 
 func _fit_panel_to_text() -> void:
@@ -414,7 +426,8 @@ func _fit_panel_to_text() -> void:
 	intro_body.custom_minimum_size = Vector2(usable_w, 0)
 
 	intro_panel.queue_redraw()
-	
+
+
 func _get_motivational_line(errors: int) -> String:
 	if errors == 0:
 		return "Perfetto! Hai gestito tutto al meglio: ogni donazione conta davvero. Continua così 💛"
@@ -422,54 +435,9 @@ func _get_motivational_line(errors: int) -> String:
 		return "Ottimo lavoro! Qualche imprevisto può capitare: l’importante è la sicurezza. Ci sei quasi 🤍"
 	else:
 		return "Non mollare! La donazione richiede attenzione e calma: riprova e migliora, un passo alla volta 🧡"
-		
-func _show_fail_popup() -> void:
-	if fail_popup != null:
-		return
 
-	fail_popup = Control.new()
-	fail_popup.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fail_popup.mouse_filter = Control.MOUSE_FILTER_STOP
-	hud_layer.add_child(fail_popup)
 
-	# sfondo scuro
-	var dim_bg := ColorRect.new()
-	dim_bg.color = Color(0, 0, 0, 0.6)
-	dim_bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	fail_popup.add_child(dim_bg)
-
-	# pannello centrale
-	var panel := Panel.new()
-	panel.custom_minimum_size = Vector2(520, 180)
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.position -= panel.custom_minimum_size * 0.5
-	fail_popup.add_child(panel)
-
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.offset_left = 20
-	vbox.offset_top = 20
-	vbox.offset_right = -20
-	vbox.offset_bottom = -20
-	panel.add_child(vbox)
-
-	var label := Label.new()
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	label.text = "❌ Donazione fallita.\n\nDovevi premere il tasto sinistro più velocemente."
-	vbox.add_child(label)
-
-	var btn := Button.new()
-	btn.text = "OK"
-	vbox.add_child(btn)
-
-	btn.pressed.connect(func():
-		fail_popup.queue_free()
-		fail_popup = null
-		_unlock_player()
-		_try_finish_room()
-	)
 func _show_fail_popup_like_summary(msg: String) -> void:
-	# usa lo stesso overlay della stanza (pixel font + stile già ok)
 	intro_open = true
 	summary_open = false
 	_lock_player()
@@ -479,23 +447,23 @@ func _show_fail_popup_like_summary(msg: String) -> void:
 	dim.visible = true
 	intro_panel.visible = true
 
-	# se hai l'icona medaglia in summary, qui la nascondiamo (opzionale)
+	# nascondi icone quando è popup fail
 	if is_instance_valid(_medal_icon):
 		_medal_icon.visible = false
+	if is_instance_valid(_needle_badge_icon):
+		_needle_badge_icon.visible = false
 
 	intro_title.text = "Donazione fallita ❌"
 	intro_body.text = msg
 	intro_btn.text = "OK"
 
-	# evita doppi connect
 	if intro_btn.pressed.is_connected(_on_intro_pressed):
 		intro_btn.pressed.disconnect(_on_intro_pressed)
 	if intro_btn.pressed.is_connected(_on_summary_pressed):
 		intro_btn.pressed.disconnect(_on_summary_pressed)
 
-	# OK: chiudi overlay e continua
 	intro_btn.pressed.connect(func():
 		_hide_overlay()
 		_unlock_player()
 		_try_finish_room()
-	)
+)

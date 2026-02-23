@@ -7,6 +7,7 @@ func _on_Inizia_pressed() -> void:
 
 func _on_button_pressed() -> void:
 	print("Start premuto")
+	RunState.reset_run_state()
 	get_tree().change_scene_to_file("res://scenes/rooms/AcceptanceRoom.tscn")
 	
 func _ready():
