@@ -124,10 +124,10 @@ grow_vertical = 2
 texture_filter = 1
 custom_minimum_size = Vector2(56, 49)
 layout_mode = 1
-offset_left = -88.0
-offset_top = -1.0
-offset_right = 730.0
-offset_bottom = 51.0
+offset_left = -12.0
+offset_top = 1.0
+offset_right = 806.0
+offset_bottom = 53.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_yty3l")
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/HintBar"]

@@ -23892,9 +23892,9 @@ color = Color(0, 0, 0, 0.65)
 
 [node name="Panel" type="Panel" parent="UI/TutorialManual"]
 layout_mode = 0
-offset_left = 924.0
+offset_left = 850.0
 offset_top = 1.0
-offset_right = 1225.0
+offset_right = 1151.0
 offset_bottom = 139.0
 theme_override_styles/panel = SubResource("StyleBoxFlat_radfe")
 
@@ -23931,10 +23931,10 @@ text = "OK
 texture_filter = 1
 custom_minimum_size = Vector2(101, 49)
 layout_mode = 0
-offset_left = 1348.0
-offset_top = 132.0
-offset_right = 1449.0
-offset_bottom = 198.0
+offset_left = 1200.0
+offset_top = 135.0
+offset_right = 1301.0
+offset_bottom = 201.0
 rotation = -1.5708
 texture = SubResource("AtlasTexture_3np3y")
 expand_mode = 1

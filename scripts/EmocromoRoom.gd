@@ -51,6 +51,11 @@ var rng := RandomNumberGenerator.new()
 func _ready() -> void:
 	$UI.hide()
 	player.set_can_move(false)
+	if overlay:
+		overlay.visible = false
+		overlay.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	if overlay_img:
+		overlay_img.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	pressure_panel.continued.connect(_on_panel_continue)
 	pressure_panel.accepted.connect(_on_decision_accept)
 	pressure_panel.rejected.connect(_on_decision_reject)
