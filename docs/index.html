@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Basta Un Quarto D'Ora — gioco educativo sulla donazione del sangue</title>
+  <meta name="description" content="Un gioco educativo gratuito e offline sul percorso della donazione del sangue. Sviluppato da Gabriele Pizzo.">
+  <style>
+    :root{
+      --bg:#140507; --panel:#1f0a0e; --panel2:#2a0d12;
+      --red:#c0342c; --red-soft:#e0574a; --gold:#ffce38;
+      --text:#efe7e2; --muted:#b79a95; --border:#4a1518;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      background:var(--bg);color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+      line-height:1.6;min-height:100vh;
+      display:flex;align-items:center;justify-content:center;padding:24px;
+    }
+    .card{
+      max-width:620px;width:100%;text-align:center;
+      background:linear-gradient(160deg,var(--panel2),var(--panel));
+      border:2px solid var(--border);border-radius:22px;padding:44px 32px;
+    }
+    .drop{font-size:72px;line-height:1}
+    h1{font-size:30px;color:#fff;margin:16px 0 8px;letter-spacing:.3px}
+    .tag{color:var(--gold);font-size:16px;font-weight:600;margin-bottom:22px}
+    p{color:var(--muted);margin-bottom:14px}
+    .feats{
+      display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:24px 0;
+    }
+    .feat{
+      background:var(--panel2);border:1px solid var(--border);
+      border-radius:999px;padding:8px 16px;font-size:14px;color:var(--text);
+    }
+    .links{margin-top:28px;display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+    a.btn{
+      display:inline-block;padding:12px 24px;border-radius:12px;
+      font-weight:700;text-decoration:none;font-size:15px;
+    }
+    a.primary{background:var(--red);color:#fff;border:1px solid var(--red-soft)}
+    a.primary:hover{background:var(--red-soft)}
+    a.ghost{background:transparent;color:var(--gold);border:1px solid var(--border)}
+    a.ghost:hover{border-color:var(--gold)}
+    footer{margin-top:30px;color:var(--muted);font-size:13px}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="drop">🩸⏱️</div>
+    <h1>Basta Un Quarto D'Ora</h1>
+    <div class="tag">Un gioco educativo sulla donazione del sangue</div>
+    <p>Vivi tutte le fasi della donazione — accettazione, emocromo, donazione e
+    sala colazione — e scopri come funziona donare il sangue, giocando.</p>
+    <div class="feats">
+      <span class="feat">✓ Gratuito</span>
+      <span class="feat">✓ Offline</span>
+      <span class="feat">✓ Senza pubblicità</span>
+      <span class="feat">✓ Nessun dato raccolto</span>
+    </div>
+    <div class="links">
+      <a class="ghost" href="privacy.html">Informativa Privacy</a>
+    </div>
+    <footer>&copy; 2026 Gabriele Pizzo</footer>
+  </div>
+</body>
+</html>
