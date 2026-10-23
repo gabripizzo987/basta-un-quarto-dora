@@ -119,6 +119,10 @@ func set_interaction_enabled(v: bool) -> void:
 	if prompt:
 		prompt.visible = false
 
+func hide_prompt() -> void:
+	if prompt:
+		prompt.hide()
+
 func set_done(v: bool) -> void:
 	donor_done = v
 	if donor_done:

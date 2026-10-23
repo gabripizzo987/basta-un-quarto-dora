@@ -30,7 +30,7 @@ offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="VBox" type="VBoxContainer" parent="Frame/Margin"]
-custom_minimum_size = Vector2(520, 360)
+custom_minimum_size = Vector2(545, 390)
 layout_mode = 2
 theme = ExtResource("2_nuyn8")
 
@@ -43,21 +43,21 @@ layout_mode = 2
 theme_override_fonts/font = ExtResource("3_ij6qp")
 
 [node name="PlayField" type="Control" parent="Frame/Margin/VBox"]
-custom_minimum_size = Vector2(520, 360)
+custom_minimum_size = Vector2(545, 390)
 layout_mode = 2
 mouse_filter = 2
 
 [node name="Arm" type="TextureRect" parent="Frame/Margin/VBox/PlayField"]
 texture_filter = 1
 layout_mode = 1
-offset_right = 460.0
-offset_bottom = 542.0
+offset_right = 490.0
+offset_bottom = 578.0
 texture = ExtResource("1_e8jcs")
 expand_mode = 1
 stretch_mode = 4
 
 [node name="ElbowMarker" type="Marker2D" parent="Frame/Margin/VBox/PlayField/Arm"]
-position = Vector2(156, 356)
+position = Vector2(166, 379)
 
 [node name="VeinZone" type="ColorRect" parent="Frame/Margin/VBox/PlayField"]
 visible = false

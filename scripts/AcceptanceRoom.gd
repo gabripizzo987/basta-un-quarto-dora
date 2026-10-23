@@ -38,7 +38,26 @@ var arrow_tween: Tween = null
 
 
 func _ready() -> void:
+	add_child(preload("res://scripts/VirtualDpad.gd").new())
 	game_ui.connect("all_donors_completed", Callable(self, "_on_all_donors_completed"))
+	call_deferred("_resize_interact_prompt")
+
+func _resize_interact_prompt() -> void:
+	var prompt := get_node_or_null("UI/InteractPrompt")
+	if prompt == null:
+		return
+	var key  := prompt.get_node_or_null("Pill/HBoxContainer/Key")  as Label
+	var text := prompt.get_node_or_null("Pill/HBoxContainer/Text") as Label
+	var pill := prompt.get_node_or_null("Pill") as PanelContainer
+	if key  != null: key.add_theme_font_size_override("font_size", 28)
+	if text != null: text.add_theme_font_size_override("font_size", 24)
+	if pill != null:
+		pill.custom_minimum_size = Vector2(160, 44)
+		pill.set_offset(SIDE_LEFT,   -21.0)
+		pill.set_offset(SIDE_TOP,      7.0)
+		pill.set_offset(SIDE_RIGHT,  139.0)
+		pill.set_offset(SIDE_BOTTOM,  51.0)
+	prompt.set("offset_pixels", Vector2(0, -95))
 
 	# summary
 	summary_layer.visible = false
@@ -76,6 +95,7 @@ func _ready() -> void:
 	_setup_tutorial_drag()
 	_setup_error_popup_hook()
 	_setup_tutorial_manual()
+	_setup_manual_overlay()
 
 
 func _setup_triage_drag_ui() -> void:
@@ -158,7 +178,26 @@ func _setup_tutorial_manual() -> void:
 
 	if tutorial_manual_ok and not tutorial_manual_ok.pressed.is_connected(Callable(self, "_on_tutorial_manual_ok_pressed")):
 		tutorial_manual_ok.pressed.connect(Callable(self, "_on_tutorial_manual_ok_pressed"))
+		
 
+func _setup_manual_overlay() -> void:
+	var panel_manual := game_ui.get_node_or_null("PanelManual") as Control
+	if panel_manual == null:
+		return
+
+	var manual_layer := CanvasLayer.new()
+	manual_layer.name = "ManualOverlay"
+	manual_layer.layer = 200
+	add_child(manual_layer)
+
+	panel_manual.reparent(manual_layer, false)
+
+	# Ri-applica gli anchor centrati dopo il reparent
+	panel_manual.set_anchors_preset(Control.PRESET_CENTER)
+	panel_manual.offset_left = -500.0
+	panel_manual.offset_top  = -300.0
+	panel_manual.offset_right  = 500.0
+	panel_manual.offset_bottom = 300.0
 func _on_intro_finished() -> void:
 	intro_button.disabled = true
 
@@ -172,6 +211,7 @@ func _hide_intro_and_start() -> void:
 	intro_layer.visible = false
 	player.set_physics_process(true)
 	player.set_process_input(true)
+	AudioManager.play_music("acceptance")
 
 	_show_tutorial_manual_once()
 
@@ -187,17 +227,29 @@ func _show_tutorial_manual_once() -> void:
 	RunState.tutorial_manual_seen = true
 
 	tutorial_manual.visible = true
-	tutorial_manual.mouse_filter = Control.MOUSE_FILTER_STOP	
+	tutorial_manual.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	if tutorial_manual_arrow:
-		if arrow_tween and arrow_tween.is_running():
-			arrow_tween.kill()
+		call_deferred("_align_arrow_to_manual_btn")
 
-		var base_y := tutorial_manual_arrow.position.y
-		arrow_tween = create_tween()
-		arrow_tween.set_loops() # infinito
-		arrow_tween.tween_property(tutorial_manual_arrow, "position:y", base_y - 8, 0.35)
-		arrow_tween.tween_property(tutorial_manual_arrow, "position:y", base_y + 24, 0.35)
+
+func _align_arrow_to_manual_btn() -> void:
+	if tutorial_manual_arrow == null:
+		return
+	var btn := game_ui.get_node_or_null("ButtonManual") as Control
+	if btn != null:
+		var btn_rect := btn.get_global_rect()
+		var cx := btn_rect.position.x + btn_rect.size.x * 0.5
+		# Arrow rotated -90deg: visual footprint is 49px wide, 101px tall (extends upward from anchor).
+		tutorial_manual_arrow.position = Vector2(cx - 24.5, btn_rect.end.y + 109.0)
+
+	if arrow_tween and arrow_tween.is_running():
+		arrow_tween.kill()
+	var base_y := tutorial_manual_arrow.position.y
+	arrow_tween = create_tween()
+	arrow_tween.set_loops()
+	arrow_tween.tween_property(tutorial_manual_arrow, "position:y", base_y - 8, 0.35)
+	arrow_tween.tween_property(tutorial_manual_arrow, "position:y", base_y + 24, 0.35)
 
 
 func _on_tutorial_manual_ok_pressed() -> void:
@@ -226,6 +278,7 @@ func _on_summary_continue_pressed() -> void:
 
 
 func show_drag_ui_for_donor(donor_node: Node2D) -> void:
+	AudioManager.play_sfx("drag_start")
 	triage_drag_ui.visible = true
 
 	if error_popup and error_popup.visible:
@@ -241,7 +294,7 @@ func show_drag_ui_for_donor(donor_node: Node2D) -> void:
 		triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		return
 
-	triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_STOP
+	triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	triage_drag_ui.start_for_donor(donor_node)
 
 
@@ -249,7 +302,7 @@ func _on_tutorial_ok_pressed() -> void:
 	tutorial_drag.visible = false
 	tutorial_drag.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_STOP
+	triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 	if pending_donor_node and is_instance_valid(pending_donor_node):
 		triage_drag_ui.start_for_donor(pending_donor_node)
@@ -268,7 +321,7 @@ func _on_error_popup_visibility_changed() -> void:
 		drag_layer.visible = not open
 
 	if triage_drag_ui:
-		triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE if open else Control.MOUSE_FILTER_STOP
+		triage_drag_ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
 func _on_all_donors_completed() -> void:
@@ -276,7 +329,6 @@ func _on_all_donors_completed() -> void:
 	var correct: int = int(total - game_ui.donors_missed_first_try.size())
 	var mistakes: int = int(game_ui.mistakes_total)
 
-	# ✅ SYNC anti-doppio (idempotente)
 	RunState.mistakes_total -= RunState.mistakes_acceptance
 	RunState.mistakes_acceptance = mistakes
 	RunState.mistakes_total += RunState.mistakes_acceptance
@@ -288,10 +340,13 @@ func _on_all_donors_completed() -> void:
 	player.set_physics_process(false)
 	player.set_process_input(false)
 
+	var room_score: int = RunState.compute_acceptance_score(correct, mistakes)
+
 	summary_title.text = "Stanza completata ✅"
-	summary_body.text = "Donatori gestiti correttamente: %d / %d\nErrori totali: %d" % [
-		correct, total, RunState.mistakes_total
+	summary_body.text = "Donatori gestiti correttamente: %d / %d\nErrori totali: %d\n\nPunti stanza: %d\nPunteggio totale: %d" % [
+		correct, total, RunState.mistakes_total, room_score, RunState.score_main()
 	]
 
+	AudioManager.play_sfx("room_complete")
 	summary_layer.visible = true
 	summary_panel.visible = true

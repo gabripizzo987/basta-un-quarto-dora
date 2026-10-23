@@ -4,7 +4,7 @@
 [ext_resource type="Theme" uid="uid://rlxur78jvedg" path="res://PixelTheme.tres" id="2_kiw3p"]
 [ext_resource type="FontFile" uid="uid://dq7fpp4xq1fid" path="res://fonts/Montserrat-MediumItalic.ttf" id="2_qbsmt"]
 [ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="3_400sg"]
-[ext_resource type="Texture2D" uid="uid://bk5jewqoslqw6" path="res://assets/ui/book_middle (1).png" id="3_cpr0p"]
+[ext_resource type="Texture2D" uid="uid://csiqr42dykr4g" path="res://assets/ui/book_ui_pixel.png" id="3_cpr0p"]
 [ext_resource type="Script" uid="uid://hy4h54fpsme6" path="res://scripts/PanelManual.gd" id="3_s0nni"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qbsmt"]
@@ -424,18 +424,13 @@ theme_override_font_sizes/normal_font_size = 14
 bbcode_enabled = true
 text = "[color=#000000]Il tuo ruolo nel gioco[/color]
 
-In questo gioco sei l’operatore di triage.
-
-In questo gioco sei L’operatore di triage. In base alle informazioni disponibili devi decidere se il donatore:
+In questo gioco sei l’operatore di triage. In base alle informazioni disponibili devi decidere se il donatore:
 
 ✅ È idoneo → può proseguire con la donazione
 
 ⏳ È temporaneamente non idoneo → va rimandato
 
-⛔ È permanentemente non idoneo → non potrà donare
-
-
-"
+⛔ È permanentemente non idoneo → non potrà donare"
 
 [node name="PagesRow2" type="HBoxContainer" parent="PanelManual"]
 visible = false

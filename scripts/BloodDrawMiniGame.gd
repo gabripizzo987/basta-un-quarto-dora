@@ -53,9 +53,17 @@ func start() -> void:
 	title.text = "Prelievo - Inserimento ago"
 	hint.text = "Premi E quando la punta dell'ago e' nella VENA"
 	
+	# Transparent frame — no dark overlay on the arm
+	var _sb := StyleBoxFlat.new()
+	_sb.bg_color = Color(0, 0, 0, 0)
+	frame.add_theme_stylebox_override("panel", _sb)
+
 	margin.add_theme_constant_override("margin_left",  TEXT_PAD_X)
 	margin.add_theme_constant_override("margin_top",   TEXT_PAD_Y)
+	margin.offset_left = 90.0
 
+	title.add_theme_font_size_override("font_size", 18)
+	hint.add_theme_font_size_override("font_size", 16)
 	title.add_theme_color_override("font_color", TITLE_COLOR)
 
 
@@ -206,14 +214,55 @@ func _check_result() -> void:
 	match result:
 		"success":
 			hint.text = "✅ Perfetto. Ago in vena."
+			AudioManager.play_sfx("correct")
 		"borderline":
 			hint.text = "⚠️ Quasi. Riprova con piu' precisione."
+			AudioManager.play_sfx("needle_miss")
+			_spawn_blood_drops(3)
 		"fail":
 			hint.text = "❌ Fuori punto. Ripeti con calma."
+			AudioManager.play_sfx("needle_miss")
+			_spawn_blood_drops(6)
 
 	await get_tree().create_timer(1.7).timeout
 	hide()
 	emit_signal("done", result)
+
+# Spawns small blood droplets flying from the needle tip — educational, not splatter.
+func _spawn_blood_drops(count: int) -> void:
+	var tip_global := _needle_tip_global()
+	var tip_local: Vector2 = tip_global - playfield.global_position
+
+	for i in count:
+		var w := randf_range(3.0, 6.0)
+		var h := randf_range(5.0, 10.0)
+
+		var drop := ColorRect.new()
+		drop.size    = Vector2(w, h)
+		drop.color   = Color(0.80, 0.07, 0.10, 1.0)
+		drop.position = tip_local - Vector2(w * 0.5, h * 0.5)
+		drop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		playfield.add_child(drop)
+
+		# Fly mostly upward/sideways (biased away from the arm)
+		var angle  := randf_range(-PI * 0.95, -PI * 0.05)
+		var spd    := randf_range(60.0, 160.0)
+		var dur    := randf_range(0.45, 0.80)
+		var end_pos := drop.position + Vector2(
+			cos(angle) * spd * dur,
+			sin(angle) * spd * dur + 30.0   # slight gravity
+		)
+
+		var tw := create_tween()
+		tw.set_parallel(true)
+		tw.tween_property(drop, "position", end_pos, dur).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		tw.tween_property(drop, "modulate:a", 0.0, dur * 0.85).set_delay(dur * 0.15)
+
+		get_tree().create_timer(dur + 0.12).timeout.connect(func():
+			if is_instance_valid(drop):
+				drop.queue_free()
+		)
+
 
 func _clamp_needle_x(x: float) -> float:
 	var max_x: float = playfield.size.x - needle.size.x

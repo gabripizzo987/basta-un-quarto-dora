@@ -22,7 +22,7 @@
 [ext_resource type="PackedScene" uid="uid://dy0rm6todo3qy" path="res://scenes/TriageDragUI.tscn" id="21_p1knn"]
 [ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="22_p1knn"]
 [ext_resource type="Script" uid="uid://c0saw7b8orrak" path="res://scripts/InteractPrompt.gd" id="22_radfe"]
-[ext_resource type="Texture2D" uid="uid://m4vdg7oays01" path="res://assets/backgrounds/Spritesheets/Arrows_pack.png" id="22_wryu8"]
+[ext_resource type="Texture2D" uid="uid://wk5t6igaywwe" path="res://assets/ui/arrow_pixel.png" id="22_wryu8"]
 [ext_resource type="PackedScene" uid="uid://ccud38roe1kn0" path="res://SummaryLayer.tscn" id="23_p1knn"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_p1knn"]
@@ -23531,7 +23531,7 @@ corner_radius_bottom_left = 10
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_3np3y"]
 atlas = ExtResource("22_wryu8")
-region = Rect2(0, 1265.78, 928.982, 490.314)
+region = Rect2(0, 0, 200, 104)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p1knn"]
 bg_color = Color(0.835378, 0.434187, 1, 1)
@@ -23982,8 +23982,8 @@ theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_fonts/font = ExtResource("22_p1knn")
 theme_override_font_sizes/font_size = 16
 text = "Trascina il donatore:
-tieni premuto CLICK SINISTRO
-e rilascialo su IDONEO o NON IDONEO."
+tieni premuto e rilascialo
+su IDONEO o NON IDONEO."
 horizontal_alignment = 1
 vertical_alignment = 1
 autowrap_mode = 3

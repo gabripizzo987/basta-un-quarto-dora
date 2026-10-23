@@ -1,21 +1,21 @@
-extends Control
+﻿extends Control
 
 signal finished(success: bool)
 
 @export var duration_sec: float = 18.0
-@export var min_pump_events: int = 1
-@export var max_pump_events: int = 2
-@export var pump_window_sec: float = 6.0
+@export var min_pump_events: int = 2
+@export var max_pump_events: int = 3
+@export var pump_window_sec: float = 4.0
 
 @export var base_fill_per_sec: float = 100.0 / 18.0
 
 @export var min_flow_when_bad: float = 0.12
-@export var flow_decay_per_sec: float = 0.50
-@export var flow_recover_per_good_pump: float = 0.95
+@export var flow_decay_per_sec: float = 0.72
+@export var flow_recover_per_good_pump: float = 0.90
 @export var flow_smooth: float = 10.0
 
 @export var low_flow_threshold: float = 0.08
-@export var low_flow_fail_after: float = 4.2
+@export var low_flow_fail_after: float = 3.0
 @export var pump_recover_threshold: float = 0.16
 
 @export var bag_top_px: int = 200
@@ -41,6 +41,7 @@ signal finished(success: bool)
 
 const DEFAULT_PIXEL_FONT_PATH := "res://fonts/PixelOperator8.ttf"
 const DEFAULT_CURSOR_PATH := "res://assets/backgrounds/Spritesheets/Mouse.png"
+const TAP_HAND_PATH := "res://assets/ui/tap_hand.png"
 
 @onready var center: CenterContainer = $CenterContainer
 @onready var offset: MarginContainer = $CenterContainer/Offset
@@ -75,10 +76,11 @@ var blood_mat: ShaderMaterial = null
 
 var _show_tutorial: bool = false
 var _tutorial_open: bool = false
-var _tutorial_root: Control = null
+var _tutorial_root: Node = null
 
-# cache cursor scalato
-var _scaled_cursor: Texture2D = null
+var _tap_indicator: Node = null
+var _tap_tween: Tween = null
+var _click_handled_frame: int = -1
 
 
 func _ready() -> void:
@@ -257,6 +259,8 @@ func _input(event: InputEvent) -> void:
 		return
 	if not pump_active:
 		return
+	# Touch is handled by the layer-120 catcher in _spawn_tap_indicator() to avoid double-fire.
+	# Here we only handle mouse clicks (PC).
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
 		_handle_pump_click()
 
@@ -269,8 +273,7 @@ func _start_pump() -> void:
 	prompt.visible = true
 	hand.visible = true
 
-	# ✅ mostra cursor SOLO quando c’è flusso basso (mano visibile)
-	_apply_custom_cursor(true)
+	_spawn_tap_indicator()
 
 	want_closed = true
 	if hand_open != null:
@@ -285,12 +288,16 @@ func _end_pump() -> void:
 	hand.visible = false
 	low_flow_time = 0.0
 
-	# ✅ torna al mouse normale
-	_apply_custom_cursor(false)
+	_kill_tap_indicator()
 
 
 func _handle_pump_click() -> void:
-	# ogni click aiuta SEMPRE tanto
+	# Guard against double-fire (touch + emulated mouse on Android both triggering same tap)
+	var cur_frame := Engine.get_process_frames()
+	if cur_frame == _click_handled_frame:
+		return
+	_click_handled_frame = cur_frame
+
 	flow = clampf(flow + (flow_recover_per_good_pump * 0.70), 0.0, 1.35)
 
 	# feedback visivo (toggle)
@@ -310,8 +317,7 @@ func _finish(success: bool) -> void:
 		" fill=", snappedf(fill_percent, 1))
 	set_process(false)
 
-	# safety: sempre ripristina cursor normale
-	_apply_custom_cursor(false)
+	_kill_tap_indicator()
 
 	finished.emit(success)
 	queue_free()
@@ -324,114 +330,177 @@ func set_show_tutorial(v: bool) -> void:
 func _open_tutorial() -> void:
 	_tutorial_open = true
 
+	var C_BG    := Color(0.050, 0.018, 0.022)
+	var C_RED   := Color(0.750, 0.135, 0.110)
+	var C_WARN  := Color(0.28, 0.06, 0.04)
+
+	var layer := CanvasLayer.new()
+	layer.layer = 150
+	get_tree().current_scene.add_child(layer)
+	_tutorial_root = layer
+
 	var root := Control.new()
 	root.name = "TutorialOverlay"
 	root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
-	add_child(root)
-	_tutorial_root = root
+	layer.add_child(root)
 
+	# Dim overlay
 	var dimm := ColorRect.new()
 	dimm.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dimm.color = Color(0, 0, 0, 0.72)
+	dimm.color = Color(0.0, 0.0, 0.0, 0.82)
+	dimm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(dimm)
 
 	var center_box := CenterContainer.new()
 	center_box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(center_box)
 
+	# Main panel
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(680, 300) # ⬅️ un pelo più grande
+	panel.custom_minimum_size = Vector2(740, 0)
 	center_box.add_child(panel)
 
-	# ✅ PANEL COLOR #D56FFF
-	# ✅ PANEL STYLE come gli altri (dark + bordo + rounded)
 	var sb := StyleBoxFlat.new()
-	sb.bg_color = Color.html("#1E1E26")     # scuro
-	sb.bg_color.a = 0.96
-	sb.border_color = Color.html("#5E5E73") # bordo soft
-	sb.border_width_left = 2
-	sb.border_width_right = 2
-	sb.border_width_top = 2
-	sb.border_width_bottom = 2
-	sb.corner_radius_top_left = 18
-	sb.corner_radius_top_right = 18
-	sb.corner_radius_bottom_left = 18
-	sb.corner_radius_bottom_right = 18
+	sb.bg_color = C_BG
+	sb.border_color = C_RED
+	sb.border_width_left = 3; sb.border_width_right  = 3
+	sb.border_width_top  = 3; sb.border_width_bottom = 3
+	sb.set_corner_radius_all(16)
 	panel.add_theme_stylebox_override("panel", sb)
 
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_top", 14)
-	margin.add_theme_constant_override("margin_bottom", 14)
+	margin.add_theme_constant_override("margin_left",   34)
+	margin.add_theme_constant_override("margin_right",  34)
+	margin.add_theme_constant_override("margin_top",    26)
+	margin.add_theme_constant_override("margin_bottom", 26)
 	panel.add_child(margin)
 
 	var vb := VBoxContainer.new()
-	vb.add_theme_constant_override("separation", 10)
+	vb.add_theme_constant_override("separation", 14)
 	margin.add_child(vb)
 
+	# ── Title ────────────────────────────────────────────────────────────────
 	var title := Label.new()
-	title.text = "Tutorial — Donazione"
-	title.add_theme_font_size_override("font_size", tutorial_title_size)
+	title.text = "DONAZIONE DEL SANGUE"
+	title.add_theme_color_override("font_color", C_RED)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(title)
 
-	# bullets
-	var b1 := Label.new()
-	b1.text = "• La sacca si riempie nel tempo."
-	b1.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	b1.add_theme_font_size_override("font_size", tutorial_body_size)
-	vb.add_child(b1)
+	# Top separator
+	var sep1 := _make_sep(C_RED, 1.0)
+	vb.add_child(sep1)
 
-	# ✅ riga con icona mouse INLINE vicino a “(ripetutamente)”
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 8)
-	vb.add_child(row)
+	# ── Bullet: bag fills automatically ──────────────────────────────────────
+	vb.add_child(_make_tut_bullet(
+		"–", "La sacca si riempie da sola nel tempo.",
+		Color(0.40, 0.90, 0.40)))
 
-	var lpre := Label.new()
-	lpre.text = "• Quando compare la mano: CLIC sinistro"
-	lpre.add_theme_font_size_override("font_size", tutorial_body_size)
-	row.add_child(lpre)
+	# ── Warning box: TOUCH instruction ───────────────────────────────────────
+	var warn_panel := PanelContainer.new()
+	var wsb := StyleBoxFlat.new()
+	wsb.bg_color = C_WARN
+	wsb.border_color = C_RED
+	wsb.border_width_left = 2; wsb.border_width_right  = 2
+	wsb.border_width_top  = 2; wsb.border_width_bottom = 2
+	wsb.set_corner_radius_all(10)
+	warn_panel.add_theme_stylebox_override("panel", wsb)
 
-	var icon := TextureRect.new()
-	icon.texture = _get_scaled_cursor_for_icon()
-	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(24, 24)  # ⬅️ iconcina piccola
-	row.add_child(icon)
+	var wm := MarginContainer.new()
+	wm.add_theme_constant_override("margin_left",  16)
+	wm.add_theme_constant_override("margin_right", 16)
+	wm.add_theme_constant_override("margin_top",   10)
+	wm.add_theme_constant_override("margin_bottom",10)
+	warn_panel.add_child(wm)
 
-	var lpost := Label.new()
-	lpost.text = "(ripetutamente)"
-	lpost.add_theme_font_size_override("font_size", tutorial_body_size)
-	row.add_child(lpost)
+	var wvb := VBoxContainer.new()
+	wvb.add_theme_constant_override("separation", 5)
+	wm.add_child(wvb)
 
-	var b3 := Label.new()
-	b3.text = "• Se reagisci troppo tardi, la donazione fallisce."
-	b3.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	b3.add_theme_font_size_override("font_size", tutorial_body_size)
-	vb.add_child(b3)
+	var warn_title_lbl := Label.new()
+	warn_title_lbl.text = "QUANDO COMPARE LA MANO:"
+	warn_title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.20))
+	warn_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wvb.add_child(warn_title_lbl)
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 6)
-	vb.add_child(spacer)
+	var warn_body_lbl := Label.new()
+	warn_body_lbl.text = "Tocca velocemente lo schermo!"
+	warn_body_lbl.add_theme_color_override("font_color", Color.WHITE)
+	warn_body_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	wvb.add_child(warn_body_lbl)
 
-	var hint := Label.new()
-	hint.text = "Premi \"Inizia\" per partire."
-	hint.add_theme_font_size_override("font_size", tutorial_body_size)
-	vb.add_child(hint)
+	vb.add_child(warn_panel)
+
+	# ── Bullet: too slow = fail ───────────────────────────────────────────────
+	vb.add_child(_make_tut_bullet(
+		"–", "Se reagisci troppo tardi, la donazione fallisce.",
+		Color(1.0, 0.40, 0.35)))
+
+	# Bottom separator
+	var sep2 := _make_sep(Color(C_RED.r, C_RED.g, C_RED.b, 0.45), 1.0)
+	vb.add_child(sep2)
+
+	# ── Start button ─────────────────────────────────────────────────────────
+	var btn_wrap := CenterContainer.new()
+	vb.add_child(btn_wrap)
 
 	var btn := Button.new()
-	btn.text = "Inizia"
-	btn.custom_minimum_size = Vector2(180, 46)
-	vb.add_child(btn)
+	btn.text = "INIZIA!"
+	btn.custom_minimum_size = Vector2(210, 54)
+	btn.focus_mode = Control.FOCUS_NONE
 
+	for pair in [[&"normal", C_RED], [&"hover", C_RED.lightened(0.15)], [&"pressed", C_RED.darkened(0.20)]]:
+		var bsb := StyleBoxFlat.new()
+		bsb.bg_color = pair[1] as Color
+		bsb.set_corner_radius_all(12)
+		bsb.border_width_left = 1; bsb.border_width_right  = 1
+		bsb.border_width_top  = 1; bsb.border_width_bottom = 1
+		bsb.border_color = (pair[1] as Color).lightened(0.30)
+		btn.add_theme_stylebox_override(pair[0], bsb)
+	btn.add_theme_stylebox_override("focus", StyleBoxFlat.new())
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn_wrap.add_child(btn)
 	btn.pressed.connect(_close_tutorial)
 
-	# pixel font anche ai nodi runtime
+	# Apply pixel font to the whole overlay, then re-override key sizes
 	_apply_pixel_font_recursive(root)
+	title.add_theme_font_size_override("font_size", tutorial_title_size + 2)
+	warn_title_lbl.add_theme_font_size_override("font_size", tutorial_body_size - 2)
+	warn_body_lbl.add_theme_font_size_override("font_size", tutorial_body_size + 2)
+	btn.add_theme_font_size_override("font_size", tutorial_title_size)
 
 	get_viewport().gui_release_focus()
 	btn.grab_focus()
+
+
+func _make_tut_bullet(icon_text: String, body_text: String, icon_color: Color) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+
+	var icon_lbl := Label.new()
+	icon_lbl.text = icon_text
+	icon_lbl.add_theme_color_override("font_color", icon_color)
+	icon_lbl.add_theme_font_size_override("font_size", tutorial_body_size + 2)
+	icon_lbl.custom_minimum_size = Vector2(22, 0)
+	row.add_child(icon_lbl)
+
+	var body := Label.new()
+	body.text = body_text
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(body)
+
+	return row
+
+
+func _make_sep(color: Color, height: float) -> CenterContainer:
+	var wrap := CenterContainer.new()
+	var line := ColorRect.new()
+	line.custom_minimum_size = Vector2(600, height)
+	line.color = color
+	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(line)
+	return wrap
 
 
 func _close_tutorial() -> void:
@@ -470,47 +539,98 @@ func _apply_pixel_font_recursive(n: Node) -> void:
 		_apply_pixel_font_recursive(ch)
 
 
-func _apply_custom_cursor(enable: bool) -> void:
-	if custom_cursor == null:
-		return
+func _spawn_tap_indicator() -> void:
+	_kill_tap_indicator()
 
-	if enable:
-		var tex := _get_scaled_cursor()
-		Input.set_custom_mouse_cursor(tex, Input.CURSOR_ARROW, cursor_hotspot)
-		Input.set_custom_mouse_cursor(tex, Input.CURSOR_POINTING_HAND, cursor_hotspot)
-		Input.set_custom_mouse_cursor(tex, Input.CURSOR_IBEAM, cursor_hotspot)
-	else:
-		Input.set_custom_mouse_cursor(null, Input.CURSOR_ARROW)
-		Input.set_custom_mouse_cursor(null, Input.CURSOR_POINTING_HAND)
-		Input.set_custom_mouse_cursor(null, Input.CURSOR_IBEAM)
+	var layer := CanvasLayer.new()
+	layer.layer = 120
+	get_tree().current_scene.add_child(layer)
+	_tap_indicator = layer
+
+	# Fullscreen invisible catcher at layer 120 — receives touch BEFORE VirtualDpad (layer 50).
+	# Uses MOUSE_FILTER_PASS so it catches the event but still lets it through for other UI.
+	var catcher := Control.new()
+	catcher.set_anchors_preset(Control.PRESET_FULL_RECT)
+	catcher.mouse_filter = Control.MOUSE_FILTER_PASS
+	layer.add_child(catcher)
+	catcher.gui_input.connect(func(ev: InputEvent) -> void:
+		if not pump_active:
+			return
+		var hit := false
+		if ev is InputEventScreenTouch and (ev as InputEventScreenTouch).pressed:
+			hit = true
+		elif ev is InputEventMouseButton \
+				and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT \
+				and (ev as InputEventMouseButton).pressed:
+			hit = true
+		if hit:
+			_handle_pump_click()
+	)
+
+	# ── Badge "TOCCA!" pixel-art: icona mano + testo pixel, affiancati ──────────
+	# HBox centrato; il pulse agisce sul gruppo intero (icona+testo insieme).
+	var group := HBoxContainer.new()
+	group.add_theme_constant_override("separation", 12)
+	group.alignment = BoxContainer.ALIGNMENT_CENTER
+	group.set_anchors_preset(Control.PRESET_CENTER)
+	group.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	group.grow_vertical   = Control.GROW_DIRECTION_BOTH
+	group.mouse_filter    = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(group)
+
+	# Icona mano pixel-art (NEAREST per non sfocarla quando è scalata)
+	if ResourceLoader.exists(TAP_HAND_PATH):
+		var tex := load(TAP_HAND_PATH)
+		if tex is Texture2D:
+			var icon := TextureRect.new()
+			icon.texture = tex
+			icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon.custom_minimum_size = Vector2(56, 64)
+			icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			group.add_child(icon)
+
+	var lbl := Label.new()
+	lbl.text = "TOCCA!"
+	lbl.add_theme_color_override("font_color", Color(1.0, 0.86, 0.18))
+	# Contorno scuro + ombra: si stacca da qualsiasi sfondo, look "da gioco".
+	lbl.add_theme_color_override("font_outline_color", Color(0.12, 0.07, 0.05))
+	lbl.add_theme_constant_override("outline_size", 6)
+	lbl.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.55))
+	lbl.add_theme_constant_override("shadow_offset_x", 2)
+	lbl.add_theme_constant_override("shadow_offset_y", 3)
+	lbl.add_theme_font_size_override("font_size", 40)
+	if pixel_font != null:
+		lbl.add_theme_font_override("font", pixel_font)
+	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	group.add_child(lbl)
+
+	# Pivot al centro del gruppo per uno scale pulito: la size del container è
+	# nota solo dopo il layout, quindi lo impostiamo in deferred (metodo con
+	# nome, niente lambda → sicuro su export Android).
+	call_deferred("_center_tap_pivot", group)
+
+	if _tap_tween != null and _tap_tween.is_valid():
+		_tap_tween.kill()
+	_tap_tween = create_tween().set_loops()
+	_tap_tween.tween_property(group, "scale", Vector2(1.16, 1.16), 0.35)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	_tap_tween.tween_property(group, "scale", Vector2(1.0, 1.0), 0.35)\
+		.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN)
 
 
-func _get_scaled_cursor() -> Texture2D:
-	if _scaled_cursor != null:
-		return _scaled_cursor
-	_scaled_cursor = _make_scaled_texture(custom_cursor, cursor_scale)
-	return _scaled_cursor
+func _center_tap_pivot(c: Control) -> void:
+	# Imposta il pivot al centro reale del badge una volta calcolato il layout,
+	# così il pulse scala dal centro senza derivare.
+	if is_instance_valid(c):
+		c.pivot_offset = c.size * 0.5
 
 
-func _get_scaled_cursor_for_icon() -> Texture2D:
-	# per la iconcina nel tutorial va bene anche lo stesso cursor scalato
-	return _get_scaled_cursor()
-
-
-func _make_scaled_texture(src: Texture2D, scale_f: float) -> Texture2D:
-	if src == null:
-		return null
-	scale_f = clampf(scale_f, 0.05, 1.0)
-
-	var img := src.get_image()
-	if img == null:
-		return src
-
-	var w := maxi(1, int(img.get_width() * scale_f))
-	var h := maxi(1, int(img.get_height() * scale_f))
-
-	# resize con nearest per pixel art
-	img.resize(w, h, Image.INTERPOLATE_NEAREST)
-
-	var tex := ImageTexture.create_from_image(img)
-	return tex
+func _kill_tap_indicator() -> void:
+	if _tap_tween != null and _tap_tween.is_valid():
+		_tap_tween.kill()
+	_tap_tween = null
+	if is_instance_valid(_tap_indicator):
+		_tap_indicator.queue_free()
+	_tap_indicator = null

@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://m4vdg7oays01"
-path="res://.godot/imported/Arrows_pack.png-b9dee2ad1f44145c3e084b853995ccb1.ctex"
+uid="uid://beoneqkr20cn0"
+path="res://.godot/imported/events_client.svg-d70c837558d15d839ecc5f91628ea96c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://assets/backgrounds/Spritesheets/Arrows_pack.png"
-dest_files=["res://.godot/imported/Arrows_pack.png-b9dee2ad1f44145c3e084b853995ccb1.ctex"]
+source_file="res://addons/GodotPlayGameServices/assets/icons/events_client.svg"
+dest_files=["res://.godot/imported/events_client.svg-d70c837558d15d839ecc5f91628ea96c.ctex"]
 
 [params]
 
@@ -32,3 +32,6 @@ process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
 detect_3d/compress_to=1
+svg/scale=1.0
+editor/scale_with_editor_scale=false
+editor/convert_colors_with_editor_theme=false

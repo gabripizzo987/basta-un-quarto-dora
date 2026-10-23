@@ -36,11 +36,12 @@ const TEX_GOLD   := preload("res://assets/ui/medals/bag_gold.png")
 const TEX_SILVER := preload("res://assets/ui/medals/bag_silver.png")
 const TEX_BRONZE := preload("res://assets/ui/medals/bag_bronze.png")
 
-# ✅ Badge Precisione Ago (usa lo stesso path che hai in EmocromoRoom)
 const TEX_NEEDLE_BADGE := preload("res://assets/ui/badges/precisione_ago.png")
 
 
 func _ready() -> void:
+	add_child(preload("res://scripts/VirtualDpad.gd").new())
+	AudioManager.play_music("final")
 	if DEBUG_FINAL:
 		print("[FINALROOM] _ready()  scene=", get_tree().current_scene.name)
 
@@ -127,6 +128,7 @@ func start_donation_for(donor_id: int) -> void:
 
 	donation_running = true
 	_lock_player()
+	_hide_all_interact_prompts()
 
 	var mg := minigame_scene.instantiate()
 	var seen: bool = bool(RunState.donation_tutorial_seen)
@@ -171,7 +173,7 @@ func start_donation_for(donor_id: int) -> void:
 		donation_running = false
 
 		if not success:
-			_show_fail_popup_like_summary("Dovevi premere il tasto sinistro più velocemente.\nLa prossima volta cerca di essere più veloce 💉")
+			_show_fail_popup_like_summary("Tocca lo schermo più velocemente!\nLa prossima volta reagisci prima.")
 			return
 
 		_unlock_player()
@@ -197,7 +199,45 @@ func _try_finish_room() -> void:
 	var total := RunState.donors_for_final.size()
 	var done := RunState.donation_completed_ids.size() + RunState.donation_failed_ids.size()
 	if total > 0 and done >= total:
+		_play_moonwalk_then_summary()
+
+
+func _play_moonwalk_then_summary() -> void:
+	var nurse := _find_player_with_can_move()
+	if nurse == null:
 		_show_summary()
+		return
+
+	var anim_sprite: AnimatedSprite2D = null
+	for child in nurse.get_children():
+		if child is AnimatedSprite2D:
+			anim_sprite = child as AnimatedSprite2D
+			break
+
+	if anim_sprite == null:
+		_show_summary()
+		return
+
+	nurse.set_can_move(false)
+	nurse.set_physics_process(false)
+
+	# Di spalle mentre scivola in giù — effetto moonwalk
+	if anim_sprite.sprite_frames != null and anim_sprite.sprite_frames.has_animation("walk_up"):
+		anim_sprite.play("walk_up")
+
+	var slide_tw := create_tween()
+	slide_tw.tween_property(nurse, "global_position:y",
+		nurse.global_position.y + 100.0, 1.6) \
+		.set_ease(Tween.EASE_IN_OUT).set_trans(Tween.TRANS_SINE)
+	await slide_tw.finished
+
+	nurse.set_physics_process(true)
+
+	if is_instance_valid(anim_sprite) and anim_sprite.sprite_frames != null \
+			and anim_sprite.sprite_frames.has_animation("idle_down"):
+		anim_sprite.play("idle_down")
+
+	_show_summary()
 
 
 func _apply_panel_layout_for_text() -> void:
@@ -223,7 +263,7 @@ func _show_intro() -> void:
 		"Ultimo step: completa la donazione per i donatori idonei.\n\n" + \
 		"• Avvicinati e premi E.\n" + \
 		"• La sacca si riempie nel tempo.\n" + \
-		"• Se compare la mano premi/lascia velocemente click sinistro mouse.\n\n" + \
+		"• Se compare la mano, tocca velocemente lo schermo.\n\n" + \
 		"Ogni donazione fallita aumenta gli errori totali."
 
 	intro_btn.text = "Inizia"
@@ -291,6 +331,11 @@ func _show_summary() -> void:
 	else:
 		needle_line = "🏅 Precisione Ago: mancata — riprova e punta alla perfezione!\n"
 		
+	RunState.compute_final_score()
+	var medal_bonus_line := ""
+	if RunState.score_medal_bonus > 0:
+		medal_bonus_line = " (bonus medaglia +%d)" % RunState.score_medal_bonus
+
 	intro_title.text = "Stanza completata ✅"
 	intro_body.text = \
 		"Medaglia: %s 🏅\n\n" % medal_name + \
@@ -298,7 +343,12 @@ func _show_summary() -> void:
 		"Donazioni completate: %d / %d\n" % [ok, total] + \
 		"Donazioni fallite: %d\n" % fail + \
 		"Errori totali: %d\n\n" % errors + \
+		"Punti stanza: %d%s\n" % [RunState.score_final, medal_bonus_line] + \
+		"PUNTEGGIO TOTALE: %d\n" % RunState.score_main() + \
+		"Gioca la Sala Colazione per guadagnare altri punti!\n\n" + \
 		_get_motivational_line(errors)
+
+	PlayGames.submit_score(RunState.score_main())
 
 	intro_btn.text = "Fine"
 
@@ -307,12 +357,85 @@ func _show_summary() -> void:
 
 	intro_btn.pressed.connect(_on_summary_pressed)
 
+	# Bottone bonus sala colazione — aggiunto dinamicamente nella ButtonsRow
+	_add_breakfast_button()
+
 	call_deferred("_fit_panel_to_text")
 
 
 func _on_summary_pressed() -> void:
 	print("END GAME / BACK TO MENU")
 	get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
+
+
+func _add_breakfast_button() -> void:
+	var buttons_row := get_node_or_null(
+		"UI/IntroLayer/OverlayRoot/IntroPanel/Margin/VBox/ButtonsRow")
+	if buttons_row == null:
+		return
+
+	# Se il bottone esiste già non aggiungerne un altro
+	if buttons_row.get_node_or_null("BtnColazione") != null:
+		return
+
+	var pf: Font = null
+	if ResourceLoader.exists("res://fonts/PixelOperator8.ttf"):
+		pf = load("res://fonts/PixelOperator8.ttf")
+
+	var btn := Button.new()
+	btn.name = "BtnColazione"
+	btn.text = "Sala Colazione"
+	btn.custom_minimum_size = Vector2(230, 56)
+	btn.focus_mode = Control.FOCUS_NONE
+
+	var C_WARM := Color(0.70, 0.38, 0.06)
+	var C_WARM_H := Color(0.85, 0.52, 0.12)
+	for pair: Array in [[&"normal", C_WARM], [&"hover", C_WARM_H], [&"pressed", C_WARM.darkened(0.2)]]:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = pair[1] as Color
+		sb.set_corner_radius_all(12)
+		sb.border_width_left = 1; sb.border_width_top    = 1
+		sb.border_width_right = 1; sb.border_width_bottom = 1
+		sb.border_color = (pair[1] as Color).lightened(0.25)
+		btn.add_theme_stylebox_override(pair[0], sb)
+	btn.add_theme_stylebox_override("focus", StyleBoxFlat.new())
+	btn.add_theme_color_override("font_color", Color.WHITE)
+	btn.add_theme_font_size_override("font_size", 18)
+	if pf != null:
+		btn.add_theme_font_override("font", pf)
+
+	buttons_row.add_child(btn)
+	btn.pressed.connect(_on_breakfast_pressed)
+
+
+func _on_breakfast_pressed() -> void:
+	AudioManager.play_sfx("btn_click")
+	_hide_overlay()
+
+	# Raccoglie dati donatori: prima i completati, poi fallback ai presenti in FinalRoom
+	var donor_data: Array = []
+	var ids_source: Array = RunState.donation_completed_ids
+	if ids_source.is_empty():
+		ids_source = RunState.donors_for_final
+	for id in ids_source:
+		var id_int := int(id)
+		if id_int >= 0 and id_int < RunState.donors.size():
+			var d: Dictionary = RunState.donors[id_int]
+			donor_data.append({"name": d.get("name", "Donatore"), "sprite_idx": id_int % 5})
+
+	# Crea e lancia il minigioco su un CanvasLayer dedicato
+	var layer := CanvasLayer.new()
+	layer.layer = 250
+	add_child(layer)
+
+	var mg := preload("res://scripts/BreakfastMinigame.gd").new()
+	mg.setup(donor_data)
+	layer.add_child(mg)
+
+	mg.finished.connect(func():
+		layer.queue_free()
+		get_tree().change_scene_to_file("res://scenes/main_menu/MainMenu.tscn")
+	)
 
 
 func _hide_overlay() -> void:
@@ -323,6 +446,19 @@ func _hide_overlay() -> void:
 	dim.visible = false
 	intro_panel.visible = false
 	_unlock_player()
+
+
+func _hide_all_interact_prompts() -> void:
+	# Nasconde tutti i nodi InteractPrompt visibili nella scena
+	var stack: Array[Node] = [get_tree().current_scene]
+	while not stack.is_empty():
+		var n: Node = stack.pop_back() as Node
+		if n == null:
+			continue
+		if n.has_method("hide_prompt"):
+			n.hide_prompt()
+		for c in n.get_children():
+			stack.append(c)
 
 
 func _find_player_with_can_move() -> Node:
@@ -453,7 +589,7 @@ func _show_fail_popup_like_summary(msg: String) -> void:
 	if is_instance_valid(_needle_badge_icon):
 		_needle_badge_icon.visible = false
 
-	intro_title.text = "Donazione fallita ❌"
+	intro_title.text = "Donazione fallita"
 	intro_body.text = msg
 	intro_btn.text = "OK"
 

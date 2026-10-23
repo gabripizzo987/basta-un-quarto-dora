@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://baf3jxln24c14" path="res://scenes/Game.gd" id="1_b4huw"]
 [ext_resource type="FontFile" uid="uid://dq7fpp4xq1fid" path="res://fonts/Montserrat-MediumItalic.ttf" id="2_fvrux"]
 [ext_resource type="Script" uid="uid://hy4h54fpsme6" path="res://scripts/PanelManual.gd" id="3_ha2mf"]
-[ext_resource type="Texture2D" uid="uid://bk5jewqoslqw6" path="res://assets/ui/book_middle (1).png" id="4_he85r"]
+[ext_resource type="Texture2D" uid="uid://csiqr42dykr4g" path="res://assets/ui/book_ui_pixel.png" id="4_he85r"]
 [ext_resource type="FontFile" uid="uid://dsn4jt3hfsxhr" path="res://fonts/PixelOperator8.ttf" id="5_fvrux"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_qbsmt"]

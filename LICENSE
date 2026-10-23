@@ -1,0 +1,37 @@
+MIT License
+
+Copyright (c) 2026 Gabriele Pizzo
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+-------------------------------------------------------------------------------
+
+NOTA SULLA PORTATA DELLA LICENZA / SCOPE NOTE
+
+Questa licenza MIT copre il CODICE SORGENTE originale di questo progetto
+(script GDScript, shader, logica di gioco) e l'audio generato proceduralmente.
+
+NON si applica agli asset di terze parti (font, sprite, tileset) inclusi nel
+progetto, che restano soggetti alle rispettive licenze originali. L'elenco
+completo delle attribuzioni e delle relative licenze è nel file CREDITS.md.
+
+This MIT license covers the original SOURCE CODE and the procedurally generated
+audio of this project. It does NOT apply to third-party assets (fonts, sprites,
+tilesets), which remain under their own original licenses. See CREDITS.md for
+the full list of attributions.

@@ -33,6 +33,13 @@ signal error_popup_closed
 @onready var label_info = $PanelAccept/ContentVBox/LabelInfo
 @onready var label_feedback = $PanelAccept/ContentVBox/LabelFeedback
 
+var _rich_info: RichTextLabel = null
+
+const _C_KEY  := "[color=#7EC8E3]"   # azzurro per le etichette
+const _C_VAL  := "[color=#F0F0F0]"   # bianco caldo per i valori
+const _C_END  := "[/color]"
+const _PIXEL_FONT := "res://fonts/PixelOperator8.ttf"
+
 @onready var error_popup = $ErrorPopup
 @onready var error_text = $ErrorPopup/Margin/VBox/ErrorText
 @onready var error_ok = $ErrorPopup/Margin/VBox/ButtonsRow/ButtonOk
@@ -94,25 +101,74 @@ func _ready() -> void:
 	rng.randomize()
 	generate_donors(5, 3) # 5 donatori, almeno 3 idonei
 
-	# inizializza array dei donatori gestiti
 	donors_done.clear()
 	for i in range(donors.size()):
 		donors_done.append(false)
 
-	# all'inizio nessun pannello visibile
 	panel_manual.visible = false
 	panel_emocromo.visible = false
 	panel_accept.visible = false
 
 	error_popup.visible = false
-	
 	error_popup.mouse_filter = Control.MOUSE_FILTER_STOP
-	# ✅ la label NON deve mangiarsi i click sopra l’OK
 	error_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 
-	# ✅ connetti al metodo GIUSTO (tu hai _on_button_ok_pressed)
 	if error_ok and not error_ok.pressed.is_connected(Callable(self, "_on_button_ok_pressed")):
 		error_ok.pressed.connect(Callable(self, "_on_button_ok_pressed"))
+
+	_style_accept_panel()
+
+func _style_accept_panel() -> void:
+	# ── Ridimensiona e sposta il pannello ────────────────────────────────────
+	panel_accept.custom_minimum_size = Vector2(500, 0)
+	panel_accept.set_offset(SIDE_LEFT,   -500.0)
+	panel_accept.set_offset(SIDE_TOP,      38.0)
+	panel_accept.set_offset(SIDE_BOTTOM, -180.0)
+
+	# ── Sfondo pixel-art ────────────────────────────────────────────────────
+	var sb := StyleBoxFlat.new()
+	sb.bg_color          = Color(0.04, 0.04, 0.11, 0.94)
+	sb.border_color      = Color(0.49, 0.60, 0.90, 0.90)
+	sb.border_width_left = 3; sb.border_width_right  = 3
+	sb.border_width_top  = 3; sb.border_width_bottom = 3
+	sb.set_corner_radius_all(0)
+	sb.shadow_color  = Color(0, 0, 0, 0.55)
+	sb.shadow_size   = 4
+	sb.shadow_offset = Vector2(4, 4)
+	panel_accept.add_theme_stylebox_override("panel", sb)
+
+	# ── Pixel font ───────────────────────────────────────────────────────────
+	var fnt: Font = null
+	if ResourceLoader.exists(_PIXEL_FONT):
+		var f := load(_PIXEL_FONT)
+		if f is Font:
+			fnt = f
+
+	# ── Nome donatore: grande, color oro ─────────────────────────────────────
+	if fnt: label_name.add_theme_font_override("font", fnt)
+	label_name.add_theme_font_size_override("font_size", 24)
+	label_name.add_theme_color_override("font_color", Color(1.00, 0.82, 0.30))
+
+	# ── RichTextLabel per i dati (sostituisce label_info) ────────────────────
+	label_info.visible = false
+	_rich_info = RichTextLabel.new()
+	_rich_info.bbcode_enabled        = true
+	_rich_info.fit_content           = true
+	_rich_info.scroll_active         = false
+	_rich_info.autowrap_mode         = TextServer.AUTOWRAP_WORD_SMART
+	_rich_info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rich_info.size_flags_vertical   = Control.SIZE_SHRINK_BEGIN
+	_rich_info.mouse_filter          = Control.MOUSE_FILTER_IGNORE
+	if fnt: _rich_info.add_theme_font_override("normal_font", fnt)
+	_rich_info.add_theme_font_size_override("normal_font_size", 19)
+	label_info.get_parent().add_child(_rich_info)
+	label_info.get_parent().move_child(_rich_info, label_info.get_index() + 1)
+
+	# ── Feedback: font pixel ─────────────────────────────────────────────────
+	if fnt: label_feedback.add_theme_font_override("font", fnt)
+	label_feedback.add_theme_font_size_override("font_size", 17)
+	label_feedback.add_theme_color_override("font_color", Color(0.85, 0.85, 0.85))
+
 
 # chiamata dall'esterno quando parli col donatore i
 func start_triage_for_slot(slot_index: int) -> void:
@@ -343,35 +399,31 @@ func show_current_donor() -> void:
 		return
 
 	var donor = donors[current_donor_index]
-	label_name.text = "Donatore: %s" % donor["name"]
+	label_name.text = "▶  %s" % donor["name"]
 
-	var sex_txt = "Maschio"
-	if donor["sex"] != "M":
-		sex_txt = "Femmina"
+	var sex_txt  := "Maschio" if donor["sex"] == "M" else "Femmina"
+	var tattoo_txt := ("Nessun tatuaggio" if not donor["has_tattoo"]
+		else "%d mesi fa" % donor["tattoo_months_ago"])
+	var donation_txt := ("Prima donazione" if donor["first_time"]
+		else "Ultima donazione: %d mesi fa" % donor["last_donation_months_ago"])
 
-	var tattoo_txt = "Nessun tatuaggio"
-	if donor["has_tattoo"]:
-		tattoo_txt = "%d mesi fa" % donor["tattoo_months_ago"]
-
-	var disease_label = donor["disease"]["label"]
-	var drug_label = donor["drug"]["label"]
-
-	var donation_txt
-	if donor["first_time"]:
-		donation_txt = "Prima donazione"
+	if _rich_info != null:
+		var k := _C_KEY; var v := _C_VAL; var e := _C_END
+		_rich_info.text = (
+			k + "Sesso: "     + e + v + sex_txt + e + "\n" +
+			k + "Età: "       + e + v + "%d anni" % donor["age"] + e + "\n" +
+			k + "Peso: "      + e + v + "%d kg" % donor["weight"] + e + "\n" +
+			k + "Tatuaggio: " + e + v + tattoo_txt + e + "\n" +
+			k + "Malattie: "  + e + v + donor["disease"]["label"] + e + "\n" +
+			k + "Farmaci: "   + e + v + donor["drug"]["label"] + e + "\n" +
+			k + "Viaggi: "    + e + v + donor["travel_label"] + e + "\n" +
+			k + "Donazione: " + e + v + donation_txt + e
+		)
 	else:
-		donation_txt = "Ultima donazione: %d mesi fa" % donor["last_donation_months_ago"]
-
-	label_info.text = "Sesso: %s\nEtà: %d anni\nPeso: %d kg\nTatuaggio: %s\nMalattie: %s\nFarmaci: %s\nViaggi: %s\n%s" % [
-		sex_txt,
-		donor["age"],
-		donor["weight"],
-		tattoo_txt,
-		disease_label,
-		drug_label,
-		donor["travel_label"],
-		donation_txt
-	]
+		label_info.text = "%s | %d anni | %d kg\n%s\n%s\n%s\n%s\n%s" % [
+			sex_txt, donor["age"], donor["weight"],
+			tattoo_txt, donor["disease"]["label"],
+			donor["drug"]["label"], donor["travel_label"], donation_txt]
 
 	label_feedback.text = ""
 	
@@ -499,8 +551,10 @@ func handle_choice(accepted: bool) -> bool:
 
 	if accepted == eligible:
 		# CORRETTO
+		AudioManager.play_sfx("correct")
 		if eligible:
-			label_feedback.text = "Corretto: %s è idoneo alla donazione.\nPasserà alla fase successiva." % donor["name"]
+			label_feedback.text = "✓ Corretto: %s è idoneo.\nPasserà alla fase successiva." % donor["name"]
+			label_feedback.add_theme_color_override("font_color", Color(0.35, 0.90, 0.45))
 
 			if not donors_for_donation.has(current_donor_index):
 				donors_for_donation.append(current_donor_index)
@@ -509,23 +563,27 @@ func handle_choice(accepted: bool) -> bool:
 			_finish_current_donor()
 			return true
 		else:
-			label_feedback.text = "Corretto: %s non è idoneo." % donor["name"]
+			label_feedback.text = "✓ Corretto: %s non è idoneo." % donor["name"]
+			label_feedback.add_theme_color_override("font_color", Color(0.35, 0.90, 0.45))
 
 			await get_tree().create_timer(1.5).timeout
 			_finish_current_donor()
 			return true
 
 	# SBAGLIATO
+	AudioManager.play_sfx("wrong")
 	mistakes_total += 1
 
 	if not donors_missed_first_try.has(current_donor_index):
 		donors_missed_first_try.append(current_donor_index)
 
 	if eligible and not accepted:
-		label_feedback.text = "Errore: %s era idoneo." % donor["name"]
+		label_feedback.text = "✗ Errore: %s era idoneo." % donor["name"]
+		label_feedback.add_theme_color_override("font_color", Color(0.95, 0.35, 0.30))
 		show_error_popup("Il donatore rispettava i criteri minimi di idoneità: dovevi ACCETTARE.")
 	elif not eligible and accepted:
-		label_feedback.text = "Errore: %s non è idoneo." % donor["name"]
+		label_feedback.text = "✗ Errore: %s non è idoneo." % donor["name"]
+		label_feedback.add_theme_color_override("font_color", Color(0.95, 0.35, 0.30))
 		var reasons := get_ineligibility_reasons(donor)
 		show_error_popup_many(reasons)
 
@@ -536,11 +594,18 @@ func handle_choice(accepted: bool) -> bool:
 
 
 func _on_ButtonManual_pressed() -> void:
-	panel_manual.visible = true
+	# Passa dai metodi guardati del pannello (blocco player + anti-blocco mash)
+	if panel_manual.has_method("open_manual"):
+		panel_manual.open_manual()
+	else:
+		panel_manual.visible = true
 
 
 func _on_ButtonCloseManual_pressed() -> void:
-	panel_manual.visible = false
+	if panel_manual.has_method("close_manual"):
+		panel_manual.close_manual()
+	else:
+		panel_manual.visible = false
 
 
 func _on_ButtonCoffee_pressed() -> void:
@@ -599,11 +664,18 @@ func _on_button_reject_pressed() -> void:
 
 
 func _on_button_manual_pressed() -> void:
-	panel_manual.visible = true
+	# Passa dai metodi guardati del pannello (blocco player + anti-blocco mash)
+	if panel_manual.has_method("open_manual"):
+		panel_manual.open_manual()
+	else:
+		panel_manual.visible = true
 
 
 func _on_button_close_manual_pressed() -> void:
-	panel_manual.visible = false
+	if panel_manual.has_method("close_manual"):
+		panel_manual.close_manual()
+	else:
+		panel_manual.visible = false
 
 
 func _on_button_ok_pressed() -> void:

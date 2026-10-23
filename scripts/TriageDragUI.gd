@@ -32,6 +32,22 @@ func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_process(true)
 	set_process_input(true)
+	_style_hint_bar()
+
+func _style_hint_bar() -> void:
+	var bar := get_node_or_null("Root/HintBar")
+	var lbl := get_node_or_null("Root/HintBar/MarginContainer/Label") as Label
+	if lbl != null:
+		lbl.text = "Trascina il donatore: tieni premuto e rilascialo su IDONEO / NON IDONEO."
+		lbl.add_theme_color_override("font_color", Color(0.88, 0.92, 1.00))
+	if bar != null and bar is PanelContainer:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color          = Color(0.04, 0.05, 0.14, 0.93)
+		sb.border_color      = Color(0.49, 0.60, 0.90, 0.85)
+		sb.border_width_left = 0; sb.border_width_right  = 0
+		sb.border_width_top  = 0; sb.border_width_bottom = 3
+		sb.set_corner_radius_all(0)
+		(bar as PanelContainer).add_theme_stylebox_override("panel", sb)
 
 func setup(_triage_logic: Node, _drop_idoneo: Control, _drop_non: Control, _drag_root: Node2D) -> void:
 	triage_logic = _triage_logic
@@ -121,48 +137,63 @@ func _input(event: InputEvent) -> void:
 		_dbg("MISSING refs drop/drag_root -> drop_id=%s drop_non=%s drag_root=%s" % [drop_idoneo, drop_non, drag_root])
 		return
 
+	var press_pos  := Vector2.ZERO
+	var is_press   := false
+	var is_release := false
+	var is_move    := false
+
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
 		if mb.button_index != MOUSE_BUTTON_LEFT:
 			return
+		press_pos  = _mouse_screen()
+		is_press   = mb.pressed
+		is_release = not mb.pressed
+	elif event is InputEventScreenTouch:
+		press_pos  = event.position
+		is_press   = event.pressed
+		is_release = not event.pressed
+	elif event is InputEventMouseMotion and dragging:
+		is_move = true
+	elif event is InputEventScreenDrag and dragging:
+		is_move = true
+	else:
+		return
 
-		var mouse_s := _mouse_screen()
+	if is_move:
+		return  # il movimento è gestito in _process
 
-		if debug_logs:
-			_dbg("LMB pressed=%s mouse_s=%s donor=%s dragging=%s attached=%s resolving=%s" %
-				[mb.pressed, mouse_s, donor, dragging, donor_attached, resolving_choice])
+	var mouse_s := press_pos if (is_press or is_release) else _mouse_screen()
 
-		# START DRAG
-		if mb.pressed:
-			if not donor_attached:
-				# click test in WORLD usando anchor
-				var mouse_w: Vector2 = donor.get_global_mouse_position()
-				var anchor_w: Vector2 = (hit_anchor.global_position if hit_anchor != null else donor.global_position)
-				var dist_w := anchor_w.distance_to(mouse_w)
-
-				_dbg("WORLD click dist=%s (radius=%s)" % [dist_w, click_radius])
-
-				if dist_w <= click_radius:
-					_attach_donor_keep_visual()
-					dragging = true
-					drag_offset_screen = mouse_s - donor.global_position
-					get_viewport().set_input_as_handled()
-				return
-			else:
-				# già attaccato: click test in SCREEN
-				var dist_s := donor.global_position.distance_to(mouse_s)
-				if dist_s <= click_radius:
-					dragging = true
-					drag_offset_screen = mouse_s - donor.global_position
-					get_viewport().set_input_as_handled()
-				return
-
-		# DROP
-		if (not mb.pressed) and dragging:
-			dragging = false
-			get_viewport().set_input_as_handled()
-			_try_drop(mouse_s)
+	# START DRAG
+	if is_press:
+		if not donor_attached:
+			var mouse_w: Vector2 = donor.get_global_mouse_position()
+			if event is InputEventScreenTouch:
+				var canvas_xform := get_viewport().get_canvas_transform()
+				mouse_w = canvas_xform.affine_inverse() * press_pos
+			var anchor_w: Vector2 = (hit_anchor.global_position if hit_anchor != null else donor.global_position)
+			var dist_w := anchor_w.distance_to(mouse_w)
+			if dist_w <= click_radius:
+				_attach_donor_keep_visual()
+				dragging = true
+				drag_offset_screen = mouse_s - donor.global_position
+				get_viewport().set_input_as_handled()
 			return
+		else:
+			var dist_s := donor.global_position.distance_to(mouse_s)
+			if dist_s <= click_radius:
+				dragging = true
+				drag_offset_screen = mouse_s - donor.global_position
+				get_viewport().set_input_as_handled()
+			return
+
+	# DROP
+	if is_release and dragging:
+		dragging = false
+		get_viewport().set_input_as_handled()
+		_try_drop(mouse_s)
+		return
 
 func _mouse_screen() -> Vector2:
 	return get_viewport().get_mouse_position()
@@ -306,4 +337,4 @@ func _on_error_popup_opened() -> void:
 
 func _on_error_popup_closed() -> void:
 	# torna normale per droppare
-	mouse_filter = Control.MOUSE_FILTER_STOP
+	mouse_filter = Control.MOUSE_FILTER_IGNORE

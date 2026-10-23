@@ -52,6 +52,8 @@ var _needle_badge_icon: TextureRect = null
 var _top_icons_row: HBoxContainer = null
 
 func _ready() -> void:
+	add_child(preload("res://scripts/VirtualDpad.gd").new())
+	AudioManager.play_music("emocromo")
 	$UI.hide()
 	player.set_can_move(false)
 	if overlay:
@@ -63,6 +65,8 @@ func _ready() -> void:
 	pressure_panel.accepted.connect(_on_decision_accept)
 	pressure_panel.rejected.connect(_on_decision_reject)
 	blood_minigame.done.connect(_on_blood_minigame_done)
+	blood_minigame.done.connect(_on_blood_minigame_done)
+	
 	analyzer_machine.body_entered.connect(_on_machine_body_entered)
 	analyzer_machine.body_exited.connect(_on_machine_body_exited)
 	analyzer_machine.interacted.connect(_on_machine_interacted)
@@ -81,6 +85,32 @@ func _ready() -> void:
 	print("SUMMARY BODY:", $SummaryLayer/SummaryPanel/Margin/VBox/Body)
 	print("SUMMARY BTN:", $SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue)
 	
+	_setup_manual_overlay()
+
+func _setup_manual_overlay() -> void:
+	var triage_ui := get_node_or_null("UI/TriageUI")
+	if triage_ui == null:
+		return
+	var panel_manual := triage_ui.get_node_or_null("PanelManual") as Control
+	if panel_manual == null:
+		return
+
+	var manual_layer := CanvasLayer.new()
+	manual_layer.name = "ManualOverlay"
+	manual_layer.layer = 200
+	add_child(manual_layer)
+
+	panel_manual.reparent(manual_layer, false)
+	panel_manual.set_anchors_preset(Control.PRESET_CENTER)
+	panel_manual.offset_left   = -500.0
+	panel_manual.offset_top    = -300.0
+	panel_manual.offset_right  =  500.0
+	panel_manual.offset_bottom =  300.0
+
+	# PanelManual trova il player tramite gruppo "player", ma qui abbiamo Nurse.
+	# Passiamo il riferimento diretto così open/close_manual() bloccano il movimento.
+	panel_manual.player = player
+
 func _on_intro_pressed() -> void:
 	dim.hide()
 	intro_panel.hide()
@@ -368,6 +398,7 @@ func _on_decision_accept() -> void:
 	var eligible := is_eligible(donor["sex"], results)
 
 	if eligible:
+		AudioManager.play_sfx("correct")
 		var id := int(donor.get("id", -1))
 		if id != -1 and not RunState.donors_for_final.has(id):
 			RunState.donors_for_final.append(id)
@@ -379,6 +410,7 @@ func _on_decision_accept() -> void:
 		)
 		return
 
+	AudioManager.play_sfx("wrong")
 	var reasons := compute_ineligibility_reasons(donor["sex"], results)
 	_record_emocromo_error("accept", reasons)
 
@@ -390,6 +422,7 @@ func _on_decision_reject() -> void:
 	var eligible := is_eligible(donor["sex"], results)
 
 	if not eligible:
+		AudioManager.play_sfx("correct")
 		var reasons := compute_ineligibility_reasons(donor["sex"], results)
 		panel_continue(
 			"Esito decisione",
@@ -398,6 +431,7 @@ func _on_decision_reject() -> void:
 		)
 		return
 
+	AudioManager.play_sfx("wrong")
 	var reasons_ok: Array[String] = ["Valori nei range: Hb/WBC/PLT idonei."]
 	_record_emocromo_error("reject", reasons_ok)
 
@@ -468,6 +502,10 @@ func _on_blood_minigame_done(result: String) -> void:
 
 	match result:
 		"success":
+			var ok_id := int(donor.get("id", -1))
+			if ok_id != -1 and not RunState.donors_needle_missed_first_try.has(ok_id) \
+					and not RunState.donors_needle_first_try_ok.has(ok_id):
+				RunState.donors_needle_first_try_ok.append(ok_id)
 			has_blood_sample = true
 			analysis_done = false
 
@@ -799,10 +837,12 @@ func _show_room_summary() -> void:
 	
 # Badge Precisione Ago: SOLO se nessuno ha sbagliato prelievo al primo tentativo
 	RunState.badge_precisione_ago = (RunState.donors_needle_missed_first_try.size() == 0 and spawned_donors.size() > 0)
-	
+
+	var room_score: int = RunState.compute_emocromo_score(correct_first_try, errors_total)
+
 	title_label.text = "Stanza completata ✅"
-	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d" % [
-		correct_first_try, total, errors_total
+	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d\n\nPunti stanza: %d\nPunteggio totale: %d" % [
+		correct_first_try, total, errors_total, room_score, RunState.score_main()
 	]
 	btn.text = "Prossima stanza"
 
@@ -811,6 +851,7 @@ func _show_room_summary() -> void:
 		btn.pressed.disconnect(_go_to_final_room)
 	btn.pressed.connect(_go_to_final_room)
 
+	AudioManager.play_sfx("room_complete")
 	$SummaryLayer.show()
 	$SummaryLayer.layer = 50
 
