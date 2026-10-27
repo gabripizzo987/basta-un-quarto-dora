@@ -840,7 +840,7 @@ func _show_room_summary() -> void:
 
 	var room_score: int = RunState.compute_emocromo_score(correct_first_try, errors_total)
 
-	title_label.text = "Stanza completata ✅"
+	title_label.text = "Stanza completata"
 	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d\n\nPunti stanza: %d\nPunteggio totale: %d" % [
 		correct_first_try, total, errors_total, room_score, RunState.score_main()
 	]
@@ -854,6 +854,9 @@ func _show_room_summary() -> void:
 	AudioManager.play_sfx("room_complete")
 	$SummaryLayer.show()
 	$SummaryLayer.layer = 50
+	preload("res://scripts/UiStyle.gd").fit_summary_panel(
+		$SummaryLayer/SummaryPanel, $SummaryLayer/SummaryPanel/Margin,
+		title_label, body_label, btn)
 
 
 func _go_to_final_room() -> void:

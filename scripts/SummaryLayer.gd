@@ -14,7 +14,7 @@ func _ready() -> void:
 
 func show_summary(correct_first_try: int, total: int, errors_total: int) -> void:
 	# ✅ testo identico allo screenshot
-	title_label.text = "Stanza completata ✅"
+	title_label.text = "Stanza completata"
 	body_label.text = "Donatori gestiti correttamente\nal primo tentativo: %d / %d\nErrori totali: %d" % [
 		correct_first_try, total, errors_total
 	]

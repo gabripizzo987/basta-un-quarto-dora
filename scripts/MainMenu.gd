@@ -125,8 +125,13 @@ func _build_ui() -> void:
 	btn_classifica.visible = PlayGames.is_available()
 
 	# Record personale (salvato sul telefono), in basso al centro
-	if PlayGames.best_score > 0:
-		var rec := _label("Record personale: %d punti" % PlayGames.best_score, 14, C_GRAY, true)
+	# Record personali per difficolta' (solo quelli gia' fatti)
+	var rec_parts: Array[String] = []
+	for d in RunState.DIFFICULTY_NAMES.size():
+		if PlayGames.best_for(d) > 0:
+			rec_parts.append("%s %d" % [RunState.DIFFICULTY_NAMES[d].capitalize(), PlayGames.best_for(d)])
+	if not rec_parts.is_empty():
+		var rec := _label("Record:  " + "   ".join(rec_parts), 14, C_GRAY, true)
 		rec.set_anchors_preset(Control.PRESET_CENTER_BOTTOM)
 		rec.offset_left = -300
 		rec.offset_right = 300
@@ -332,6 +337,107 @@ func _animate_intro() -> void:
 
 func _on_button_pressed() -> void:
 	AudioManager.play_sfx("btn_click")
+	_show_difficulty_panel()
+
+
+# ── Scelta difficolta' ───────────────────────────────────────────────────────
+
+var _difficulty_panel: Control = null
+
+const DIFFICULTY_INFO := [
+	["FACILE", "Puzzle piccoli e più tempo"],
+	["MEDIO", "L'esperienza classica"],
+	["DIFFICILE", "Puzzle grandi, poco tempo"],
+]
+
+func _show_difficulty_panel() -> void:
+	if is_instance_valid(_difficulty_panel):
+		_difficulty_panel.queue_free()
+	_difficulty_panel = _build_difficulty_panel()
+	add_child(_difficulty_panel)
+	_difficulty_panel.move_to_front()
+
+
+func _build_difficulty_panel() -> Control:
+	var overlay := Control.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+
+	var dim := ColorRect.new()
+	dim.set_anchors_preset(Control.PRESET_FULL_RECT)
+	dim.color = Color(0, 0, 0, 0.78)
+	dim.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.add_child(dim)
+
+	var box := PanelContainer.new()
+	box.set_anchors_preset(Control.PRESET_CENTER)
+	box.offset_left = -230
+	box.offset_right = 230
+	box.offset_top = -230
+	box.offset_bottom = 230
+	var st := StyleBoxFlat.new()
+	st.bg_color = Color(0.09, 0.04, 0.04)
+	st.set_corner_radius_all(14)
+	st.border_width_left = 2; st.border_width_top = 2
+	st.border_width_right = 2; st.border_width_bottom = 2
+	st.border_color = C_RED
+	box.add_theme_stylebox_override("panel", st)
+	overlay.add_child(box)
+
+	var margin := MarginContainer.new()
+	for side in ["margin_left", "margin_right"]:
+		margin.add_theme_constant_override(side, 30)
+	for side in ["margin_top", "margin_bottom"]:
+		margin.add_theme_constant_override(side, 22)
+	box.add_child(margin)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 14)
+	margin.add_child(vbox)
+
+	vbox.add_child(_label("SCEGLI LA DIFFICOLTÀ", 20, C_WHITE, true))
+	var sep := ColorRect.new()
+	sep.custom_minimum_size = Vector2(0, 2)
+	sep.color = C_RED
+	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	vbox.add_child(sep)
+
+	for i in DIFFICULTY_INFO.size():
+		var selected: bool = i == RunState.difficulty
+		var nc: Color = C_RED if selected else C_DARK_BTN
+		var hc: Color = C_RED_HOVER if selected else C_DARK_HOVER
+		var btn := _button(DIFFICULTY_INFO[i][0], nc, hc, nc.darkened(0.15), 360, 56, 20)
+		btn.pressed.connect(_on_difficulty_chosen.bind(i))
+		btn.mouse_entered.connect(_play_btn_hover)
+		var wrap := CenterContainer.new()
+		wrap.add_child(btn)
+		vbox.add_child(wrap)
+		vbox.add_child(_label(DIFFICULTY_INFO[i][1], 13, C_GRAY, true))
+
+	var back := _button("Indietro", C_DARK_BTN, C_DARK_HOVER, C_DARK_BTN.darkened(0.15), 160, 40, 15)
+	back.pressed.connect(_on_difficulty_back)
+	var back_wrap := CenterContainer.new()
+	back_wrap.add_child(back)
+	vbox.add_child(back_wrap)
+	return overlay
+
+
+func _on_difficulty_back() -> void:
+	AudioManager.play_sfx("btn_click")
+	if is_instance_valid(_difficulty_panel):
+		_difficulty_panel.queue_free()
+	_difficulty_panel = null
+
+
+func _on_difficulty_chosen(d: int) -> void:
+	AudioManager.play_sfx("btn_click")
+	RunState.set_difficulty(d)
+	if is_instance_valid(_difficulty_panel):
+		_difficulty_panel.queue_free()
+	_difficulty_panel = null
+	_start_game()
+
+
+func _start_game() -> void:
 	RunState.reset_run_state()
 	var tw := create_tween()
 	tw.tween_property(self, "modulate:a", 0.0, 0.4)

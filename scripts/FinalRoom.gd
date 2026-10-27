@@ -138,6 +138,11 @@ func start_donation_for(donor_id: int) -> void:
 	if mg.has_method("set_show_tutorial"):
 		mg.set_show_tutorial(show_tut)
 
+	# minigioco etichette: regole della difficolta' scelta (primo donatore piu' facile)
+	if mg.has_method("set_puzzle_from_rules"):
+		var donations_done := RunState.donation_completed_ids.size() + RunState.donation_failed_ids.size()
+		mg.set_puzzle_from_rules(donations_done == 0)
+
 	hud_layer.add_child(mg)
 
 	if mg is Control:
@@ -173,7 +178,10 @@ func start_donation_for(donor_id: int) -> void:
 		donation_running = false
 
 		if not success:
-			_show_fail_popup_like_summary("Tocca lo schermo più velocemente!\nLa prossima volta reagisci prima.")
+			if RunState.last_donation_fail_reason == "labels":
+				_show_fail_popup_like_summary("Etichette non verificate!\nSenza il controllo la sacca non si può usare.\nLa prossima volta collega tutte le etichette.")
+			else:
+				_show_fail_popup_like_summary("Tocca lo schermo più velocemente!\nLa prossima volta reagisci prima.")
 			return
 
 		_unlock_player()
@@ -336,13 +344,15 @@ func _show_summary() -> void:
 	if RunState.score_medal_bonus > 0:
 		medal_bonus_line = " (bonus medaglia +%d)" % RunState.score_medal_bonus
 
-	intro_title.text = "Stanza completata ✅"
+	intro_title.text = "Stanza completata"
 	intro_body.text = \
 		"Medaglia: %s 🏅\n\n" % medal_name + \
 		needle_line + "\n" + \
 		"Donazioni completate: %d / %d\n" % [ok, total] + \
 		"Donazioni fallite: %d\n" % fail + \
 		"Errori totali: %d\n\n" % errors + \
+		"Difficoltà: %s\n" % RunState.DIFFICULTY_NAMES[RunState.difficulty] + \
+		"Etichette verificate: %d (+%d)\n" % [RunState.labels_verified, RunState.score_labels] + \
 		"Punti stanza: %d%s\n" % [RunState.score_final, medal_bonus_line] + \
 		"PUNTEGGIO TOTALE: %d\n" % RunState.score_main() + \
 		"Gioca la Sala Colazione per guadagnare altri punti!\n\n" + \

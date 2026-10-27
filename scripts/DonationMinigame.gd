@@ -149,8 +149,114 @@ func _ready() -> void:
 
 	_set_fill_shader(0.0)
 
+	_spawn_label_puzzle()
+
 	if _show_tutorial:
 		_open_tutorial()
+
+
+# =============================
+# MINIGIOCO ETICHETTE (accanto alla sacca)
+# =============================
+const LABEL_PUZZLE_SCRIPT := preload("res://scripts/LabelMatchPuzzle.gd")
+var label_puzzle: Control = null
+var puzzle_size: int = 5
+var puzzle_pairs: int = 4
+var puzzle_points: int = 50
+var puzzle_grace: float = 9.0      # secondi extra a sacca piena per finire le etichette
+
+var _grace_left: float = -1.0      # >= 0 mentre si aspetta il puzzle a sacca piena
+var _puzzle_solved_at: float = -1.0
+var _fail_reason: String = "flow"
+
+## Chiamare prima di add_child.
+func set_puzzle_difficulty(grid_size: int, pairs: int, points: int = 50, grace: float = 9.0) -> void:
+	puzzle_size = grid_size
+	puzzle_pairs = pairs
+	puzzle_points = points
+	puzzle_grace = grace
+
+
+## Imposta il puzzle dalle regole della difficolta' scelta nel menu.
+func set_puzzle_from_rules(first_donor: bool) -> void:
+	var r: Dictionary = RunState.label_rules()
+	if first_donor:
+		set_puzzle_difficulty(r.size_first, r.pairs_first, r.points, r.grace)
+	else:
+		set_puzzle_difficulty(r.size, r.pairs, r.points, r.grace)
+
+
+## Sacca piena: la donazione e' completa solo con le etichette verificate.
+func _process_bag_full(delta: float) -> void:
+	if not is_instance_valid(label_puzzle) or label_puzzle.is_solved():
+		if _puzzle_solved_at < 0.0:
+			_puzzle_solved_at = t_total
+		t_total += delta
+		# lascia vedere il timbro "VERIFICATE" un attimo prima di chiudere
+		if t_total - _puzzle_solved_at >= 1.0:
+			_finish(true)
+		return
+
+	if _grace_left < 0.0:
+		_grace_left = puzzle_grace
+		if pump_active:
+			_end_pump()
+		hand.visible = false
+		prompt.visible = true
+		_set_puzzle_paused(false)
+
+	_grace_left -= delta
+	prompt.text = "Sacca piena! Verifica le etichette: %d" % maxi(0, ceili(_grace_left))
+	label_puzzle.set_countdown(_grace_left, puzzle_grace)
+	if _grace_left <= 0.0:
+		_fail_reason = "labels"
+		_finish(false)
+
+
+func _spawn_label_puzzle() -> void:
+	# Layer proprio: la scena della donazione e' scalata (0.63) e il puzzle
+	# deve restare a grandezza piena. Sta sotto il tocco della mano (120)
+	# e sotto il tutorial (150), quindi non li blocca mai.
+	var layer := CanvasLayer.new()
+	layer.name = "LabelPuzzleLayer"
+	layer.layer = 100
+	add_child(layer)
+
+	label_puzzle = LABEL_PUZZLE_SCRIPT.new()
+	label_puzzle.name = "LabelMatchPuzzle"
+	label_puzzle.setup(puzzle_size, puzzle_pairs)
+	label_puzzle.points = puzzle_points
+	layer.add_child(label_puzzle)
+	label_puzzle.solved.connect(_on_label_puzzle_solved)
+	get_viewport().size_changed.connect(_layout_label_puzzle)
+	call_deferred("_layout_label_puzzle")
+
+
+func _layout_label_puzzle() -> void:
+	if not is_instance_valid(label_puzzle):
+		return
+	var vp := get_viewport_rect().size
+	var ps: Vector2 = label_puzzle.size
+	# la sacca sta circa al centro: il puzzle va nello spazio libero a destra
+	var bag_right := vp.x * 0.5 + 90.0
+	var free_w := vp.x - 16.0 - bag_right
+	var x := bag_right + maxf(0.0, (free_w - ps.x) * 0.5)
+	x = minf(x, vp.x - ps.x - 12.0)
+	var y := maxf(8.0, (vp.y - ps.y) * 0.5)
+	label_puzzle.position = Vector2(x, y).round()
+
+
+func _set_puzzle_paused(p: bool) -> void:
+	if is_instance_valid(label_puzzle):
+		label_puzzle.set_paused(p)
+
+
+func _on_label_puzzle_solved() -> void:
+	RunState.labels_verified += 1
+	RunState.score_labels += puzzle_points
+	_puzzle_solved_at = t_total
+	if is_instance_valid(label_puzzle):
+		label_puzzle.set_countdown(-1.0, 1.0)
 
 
 func _apply_hard_layout_fix() -> void:
@@ -207,7 +313,7 @@ func _process(delta: float) -> void:
 			" lowT=", snappedf(low_flow_time, 2))
 
 	if fill_percent >= 100.0:
-		_finish(true)
+		_process_bag_full(delta)
 		return
 
 	t_total += delta
@@ -274,6 +380,7 @@ func _start_pump() -> void:
 	hand.visible = true
 
 	_spawn_tap_indicator()
+	_set_puzzle_paused(true)
 
 	want_closed = true
 	if hand_open != null:
@@ -289,6 +396,7 @@ func _end_pump() -> void:
 	low_flow_time = 0.0
 
 	_kill_tap_indicator()
+	_set_puzzle_paused(false)
 
 
 func _handle_pump_click() -> void:
@@ -318,7 +426,9 @@ func _finish(success: bool) -> void:
 	set_process(false)
 
 	_kill_tap_indicator()
+	_set_puzzle_paused(true)
 
+	RunState.last_donation_fail_reason = "" if success else _fail_reason
 	finished.emit(success)
 	queue_free()
 
@@ -329,6 +439,7 @@ func set_show_tutorial(v: bool) -> void:
 
 func _open_tutorial() -> void:
 	_tutorial_open = true
+	_set_puzzle_paused(true)
 
 	var C_BG    := Color(0.050, 0.018, 0.022)
 	var C_RED   := Color(0.750, 0.135, 0.110)
@@ -395,6 +506,11 @@ func _open_tutorial() -> void:
 	vb.add_child(_make_tut_bullet(
 		"–", "La sacca si riempie da sola nel tempo.",
 		Color(0.40, 0.90, 0.40)))
+
+	# ── Bullet: minigioco etichette ──────────────────────────────────────────
+	vb.add_child(_make_tut_bullet(
+		"–", "Intanto collega sacche e provette dello stesso colore: è il controllo etichette!",
+		Color(1.0, 0.81, 0.22)))
 
 	# ── Warning box: TOUCH instruction ───────────────────────────────────────
 	var warn_panel := PanelContainer.new()
@@ -505,6 +621,7 @@ func _make_sep(color: Color, height: float) -> CenterContainer:
 
 func _close_tutorial() -> void:
 	_tutorial_open = false
+	_set_puzzle_paused(false)
 	if is_instance_valid(_tutorial_root):
 		_tutorial_root.queue_free()
 	_tutorial_root = null

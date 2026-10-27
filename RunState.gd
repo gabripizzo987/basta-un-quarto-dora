@@ -40,10 +40,47 @@ var score_emocromo: int = 0
 var score_final: int = 0
 var score_medal_bonus: int = 0
 var score_breakfast: int = 0
+var score_labels: int = 0          # bonus minigioco "Etichette" in sala donazione
+var labels_verified: int = 0
+
+# ── DIFFICOLTA' ──────────────────────────────────────────────────────────────
+enum Difficulty { FACILE, MEDIO, DIFFICILE }
+const DIFFICULTY_NAMES := ["FACILE", "MEDIO", "DIFFICILE"]
+const OPTIONS_PATH := "user://opzioni.cfg"
+
+var difficulty: int = Difficulty.MEDIO
+
+## Minigioco etichette per difficolta':
+##   size_first/pairs_first = primo donatore, size/pairs = donatori successivi
+##   grace = secondi extra per finire le etichette quando la sacca e' piena
+##   points = punti per ogni griglia completata
+const LABEL_PUZZLE_RULES := [
+	{"size_first": 4, "pairs_first": 3, "size": 4, "pairs": 3, "grace": 12.0, "points": 30},  # FACILE
+	{"size_first": 4, "pairs_first": 3, "size": 5, "pairs": 4, "grace": 9.0,  "points": 50},  # MEDIO
+	{"size_first": 5, "pairs_first": 4, "size": 6, "pairs": 5, "grace": 7.0,  "points": 80},  # DIFFICILE
+]
+
+func label_rules() -> Dictionary:
+	return LABEL_PUZZLE_RULES[clampi(difficulty, 0, LABEL_PUZZLE_RULES.size() - 1)]
+
+func set_difficulty(d: int) -> void:
+	difficulty = clampi(d, 0, DIFFICULTY_NAMES.size() - 1)
+	var cfg := ConfigFile.new()
+	cfg.load(OPTIONS_PATH)
+	cfg.set_value("gioco", "difficolta", difficulty)
+	cfg.save(OPTIONS_PATH)
+
+func _ready() -> void:
+	var cfg := ConfigFile.new()
+	if cfg.load(OPTIONS_PATH) == OK:
+		difficulty = clampi(int(cfg.get_value("gioco", "difficolta", Difficulty.MEDIO)), 0, 2)
+
+# Motivo dell'ultima donazione fallita (lo mostra la sala finale)
+var last_donation_fail_reason: String = ""
 
 # Punteggio senza la sala colazione (che e' facoltativa)
 func score_main() -> int:
-	return score_acceptance + score_emocromo + score_final + score_medal_bonus
+	return score_acceptance + score_emocromo + score_final + score_medal_bonus + score_labels
 
 func score_total() -> int:
 	return score_main() + score_breakfast
@@ -89,6 +126,8 @@ func reset_run_state() -> void:
 	score_final = 0
 	score_medal_bonus = 0
 	score_breakfast = 0
+	score_labels = 0
+	labels_verified = 0
 
 	# errori
 	mistakes_acceptance = 0
@@ -109,6 +148,8 @@ func reset_final_room_state() -> void:
 	score_final = 0
 	score_medal_bonus = 0
 	score_breakfast = 0
+	score_labels = 0
+	labels_verified = 0
 
 func recompute_mistakes_total() -> void:
 	mistakes_total = mistakes_acceptance + mistakes_emocromo + mistakes_final

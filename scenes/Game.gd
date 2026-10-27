@@ -35,8 +35,8 @@ signal error_popup_closed
 
 var _rich_info: RichTextLabel = null
 
-const _C_KEY  := "[color=#7EC8E3]"   # azzurro per le etichette
-const _C_VAL  := "[color=#F0F0F0]"   # bianco caldo per i valori
+const _C_KEY  := "[color=#9E9EB3]"   # grigio per le etichette (stile UiStyle)
+const _C_VAL  := "[color=#FFFFFF]"   # bianco per i valori
 const _C_END  := "[/color]"
 const _PIXEL_FONT := "res://fonts/PixelOperator8.ttf"
 
@@ -125,17 +125,22 @@ func _style_accept_panel() -> void:
 	panel_accept.set_offset(SIDE_TOP,      38.0)
 	panel_accept.set_offset(SIDE_BOTTOM, -180.0)
 
-	# ── Sfondo pixel-art ────────────────────────────────────────────────────
-	var sb := StyleBoxFlat.new()
-	sb.bg_color          = Color(0.04, 0.04, 0.11, 0.94)
-	sb.border_color      = Color(0.49, 0.60, 0.90, 0.90)
-	sb.border_width_left = 3; sb.border_width_right  = 3
-	sb.border_width_top  = 3; sb.border_width_bottom = 3
-	sb.set_corner_radius_all(0)
-	sb.shadow_color  = Color(0, 0, 0, 0.55)
-	sb.shadow_size   = 4
-	sb.shadow_offset = Vector2(4, 4)
+	# ── Sfondo: stile unico del gioco (UiStyle) ─────────────────────────────
+	var sb := preload("res://scripts/UiStyle.gd").panel_box()
+	sb.content_margin_left = 18
+	sb.content_margin_right = 18
+	sb.content_margin_top = 14
+	sb.content_margin_bottom = 14
 	panel_accept.add_theme_stylebox_override("panel", sb)
+	# margini interni: prima il testo toccava il bordo
+	var content := panel_accept.get_node_or_null("ContentVBox") as Control
+	if content != null:
+		content.set_anchors_preset(Control.PRESET_FULL_RECT)
+		content.offset_left = 20
+		content.offset_right = -20
+		content.offset_top = 16
+		content.offset_bottom = -16
+		content.add_theme_constant_override("separation", 10)
 
 	# ── Pixel font ───────────────────────────────────────────────────────────
 	var fnt: Font = null
@@ -144,10 +149,10 @@ func _style_accept_panel() -> void:
 		if f is Font:
 			fnt = f
 
-	# ── Nome donatore: grande, color oro ─────────────────────────────────────
+	# ── Nome donatore: titolo magenta come gli altri pannelli ───────────────
 	if fnt: label_name.add_theme_font_override("font", fnt)
 	label_name.add_theme_font_size_override("font_size", 24)
-	label_name.add_theme_color_override("font_color", Color(1.00, 0.82, 0.30))
+	label_name.add_theme_color_override("font_color", preload("res://scripts/UiStyle.gd").TITLE)
 
 	# ── RichTextLabel per i dati (sostituisce label_info) ────────────────────
 	label_info.visible = false
@@ -160,7 +165,8 @@ func _style_accept_panel() -> void:
 	_rich_info.size_flags_vertical   = Control.SIZE_SHRINK_BEGIN
 	_rich_info.mouse_filter          = Control.MOUSE_FILTER_IGNORE
 	if fnt: _rich_info.add_theme_font_override("normal_font", fnt)
-	_rich_info.add_theme_font_size_override("normal_font_size", 19)
+	_rich_info.add_theme_font_size_override("normal_font_size", 18)
+	_rich_info.add_theme_constant_override("line_separation", 6)
 	label_info.get_parent().add_child(_rich_info)
 	label_info.get_parent().move_child(_rich_info, label_info.get_index() + 1)
 
@@ -399,7 +405,7 @@ func show_current_donor() -> void:
 		return
 
 	var donor = donors[current_donor_index]
-	label_name.text = "▶  %s" % donor["name"]
+	label_name.text = donor["name"]
 
 	var sex_txt  := "Maschio" if donor["sex"] == "M" else "Femmina"
 	var tattoo_txt := ("Nessun tatuaggio" if not donor["has_tattoo"]

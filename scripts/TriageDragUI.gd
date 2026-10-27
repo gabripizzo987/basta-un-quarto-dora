@@ -34,20 +34,38 @@ func _ready() -> void:
 	set_process_input(true)
 	_style_hint_bar()
 
+## La vecchia barra di testo in alto non serve piu': lo spiega il tutorial,
+## e durante il trascinamento le sacche si illuminano da sole.
 func _style_hint_bar() -> void:
-	var bar := get_node_or_null("Root/HintBar")
-	var lbl := get_node_or_null("Root/HintBar/MarginContainer/Label") as Label
-	if lbl != null:
-		lbl.text = "Trascina il donatore: tieni premuto e rilascialo su IDONEO / NON IDONEO."
-		lbl.add_theme_color_override("font_color", Color(0.88, 0.92, 1.00))
-	if bar != null and bar is PanelContainer:
-		var sb := StyleBoxFlat.new()
-		sb.bg_color          = Color(0.04, 0.05, 0.14, 0.93)
-		sb.border_color      = Color(0.49, 0.60, 0.90, 0.85)
-		sb.border_width_left = 0; sb.border_width_right  = 0
-		sb.border_width_top  = 0; sb.border_width_bottom = 3
-		sb.set_corner_radius_all(0)
-		(bar as PanelContainer).add_theme_stylebox_override("panel", sb)
+	var bar := get_node_or_null("Root/HintBar") as Control
+	if bar != null:
+		bar.visible = false
+
+
+var _glow_t: float = 0.0
+
+## Mentre trascini: le due sacche pulsano, quella sotto il dito si ingrandisce.
+func _update_drop_highlight(delta: float) -> void:
+	if drop_idoneo == null or drop_non == null:
+		return
+	var active := visible and dragging and donor_attached and not resolving_choice
+	_glow_t += delta
+	var mouse_s := _mouse_screen()
+	for zone in [drop_idoneo, drop_non]:
+		var z := zone as Control
+		z.pivot_offset = z.size * 0.5
+		var target_scale := Vector2.ONE
+		var target_mod := Color(1, 1, 1, 1)
+		if active:
+			var over := z.get_global_rect().has_point(mouse_s)
+			if over:
+				target_scale = Vector2(1.10, 1.10)
+				target_mod = Color(1.25, 1.25, 1.25, 1)
+			else:
+				var pulse := 1.0 + 0.12 * (0.5 + 0.5 * sin(_glow_t * 6.0))
+				target_mod = Color(pulse, pulse, pulse, 1)
+		z.scale = z.scale.lerp(target_scale, minf(1.0, delta * 14.0))
+		z.modulate = z.modulate.lerp(target_mod, minf(1.0, delta * 14.0))
 
 func setup(_triage_logic: Node, _drop_idoneo: Control, _drop_non: Control, _drag_root: Node2D) -> void:
 	triage_logic = _triage_logic
@@ -88,6 +106,7 @@ func _process(_delta: float) -> void:
 	if triage_logic == null:
 		visible = false
 		return
+	_update_drop_highlight(_delta)
 
 	var should_show := false
 	if triage_logic.has_method("is_triage_active"):
