@@ -51,17 +51,37 @@ const OPTIONS_PATH := "user://opzioni.cfg"
 var difficulty: int = Difficulty.MEDIO
 
 ## Minigioco etichette per difficolta':
-##   size_first/pairs_first = primo donatore, size/pairs = donatori successivi
+##   first / next = puzzle da completare per il primo donatore e per i successivi,
+##                  come lista di [lato griglia, coppie]: due voci = due puzzle di fila
 ##   grace = secondi extra per finire le etichette quando la sacca e' piena
 ##   points = punti per ogni griglia completata
 const LABEL_PUZZLE_RULES := [
-	{"size_first": 4, "pairs_first": 3, "size": 4, "pairs": 3, "grace": 12.0, "points": 30},  # FACILE
-	{"size_first": 4, "pairs_first": 3, "size": 5, "pairs": 4, "grace": 9.0,  "points": 50},  # MEDIO
-	{"size_first": 5, "pairs_first": 4, "size": 6, "pairs": 5, "grace": 7.0,  "points": 80},  # DIFFICILE
+	# FACILE (era il vecchio Medio)
+	{"first": [[4, 3]], "next": [[5, 4]], "grace": 9.0, "points": 30},
+	# MEDIO (era il vecchio Difficile)
+	{"first": [[5, 4]], "next": [[6, 5]], "grace": 7.0, "points": 50},
+	# DIFFICILE: due puzzle di fila per ogni donatore
+	{"first": [[5, 4], [5, 4]], "next": [[5, 4], [6, 5]], "grace": 11.5, "points": 80},
 ]
+
+## Stanza emocromo per difficolta':
+##   needle = moltiplicatore della velocita' dell'ago nel prelievo
+const ROOM2_RULES := [
+	{"needle": 1.0},    # FACILE: come prima
+	{"needle": 1.2},    # MEDIO
+	{"needle": 1.45},   # DIFFICILE
+]
+
+func room2_rules() -> Dictionary:
+	return ROOM2_RULES[clampi(difficulty, 0, ROOM2_RULES.size() - 1)]
 
 func label_rules() -> Dictionary:
 	return LABEL_PUZZLE_RULES[clampi(difficulty, 0, LABEL_PUZZLE_RULES.size() - 1)]
+
+## Lista dei puzzle ([lato, coppie]) per questo donatore.
+func label_sequence(first_donor: bool) -> Array:
+	var r := label_rules()
+	return (r.first if first_donor else r.next).duplicate(true)
 
 func set_difficulty(d: int) -> void:
 	difficulty = clampi(d, 0, DIFFICULTY_NAMES.size() - 1)

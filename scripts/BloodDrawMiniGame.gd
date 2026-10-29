@@ -15,7 +15,8 @@ signal done(result: String) # "success" | "borderline" | "fail"
 @onready var vein_x: TextureRect = $Frame/Margin/VBox/PlayField/VeinDot
 
 var active: bool = false
-var speed: float = 280.0
+const BASE_SPEED: float = 280.0
+var speed: float = BASE_SPEED
 var dir: int = 1
 var needle_y: float = 0.0
 var fixed_x: float = 0.0
@@ -49,9 +50,16 @@ func start() -> void:
 	show()
 	active = true
 	set_process(true)
+	# ago piu' veloce in Medio e Difficile
+	speed = BASE_SPEED * float(RunState.room2_rules().needle)
 
-	title.text = "Prelievo - Inserimento ago"
-	hint.text = "Premi E quando la punta dell'ago e' nella VENA"
+	# Niente scritte in alto (come nella prima stanza): cosa fare e l'esito
+	# li dice gia' il pannello in basso. Le etichette restano (trasparenti)
+	# solo per non spostare braccio e ago, che sono posizionati sotto di loro.
+	title.text = "Prelievo"
+	hint.text = " "
+	title.modulate.a = 0.0
+	hint.modulate.a = 0.0
 	
 	# Transparent frame — no dark overlay on the arm
 	var _sb := StyleBoxFlat.new()

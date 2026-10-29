@@ -159,6 +159,16 @@ func setup(n: int, k: int) -> void:
 	queue_redraw()
 
 
+## Puzzle n-esimo di una serie (Difficile: due per donatore). Mostra "1/2".
+var _stage: int = 1
+var _stage_total: int = 1
+
+func set_stage(i: int, total: int) -> void:
+	_stage = i
+	_stage_total = total
+	queue_redraw()
+
+
 ## Mostra il conto alla rovescia rosso (left < 0 lo spegne).
 func set_countdown(left: float, total: float) -> void:
 	_countdown_left = left
@@ -624,7 +634,10 @@ func _draw_header() -> void:
 		var tx := x + p * 3
 		var tw := label.end.x - f - tx
 		var ty := label.position.y + label.size.y * 0.5 + 8.0
-		draw_string(_font, Vector2(tx, ty), "LOTTO " + _lot_code, HORIZONTAL_ALIGNMENT_CENTER, tw, 16, C_INK)
+		var txt := "LOTTO " + _lot_code
+		if _stage_total > 1:
+			txt += "  %d/%d" % [_stage, _stage_total]
+		draw_string(_font, Vector2(tx, ty), txt, HORIZONTAL_ALIGNMENT_CENTER, tw, 16, C_INK)
 
 
 func _draw_grid() -> void:

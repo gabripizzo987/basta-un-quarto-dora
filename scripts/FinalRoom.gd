@@ -1,5 +1,7 @@
 extends Node2D
 
+const UiStyle := preload("res://scripts/UiStyle.gd")
+
 @export var donor_scene: PackedScene
 @export var minigame_scene: PackedScene
 
@@ -282,6 +284,19 @@ func _show_intro() -> void:
 		intro_btn.pressed.disconnect(_on_summary_pressed)
 
 	intro_btn.pressed.connect(_on_intro_pressed)
+	_set_top_icons_visible(false)
+	_fit_overlay_panel(640.0)
+
+
+## Stile unico (UiStyle) + pannello alto quanto il testo: i pulsanti restano dentro.
+func _fit_overlay_panel(width: float) -> void:
+	UiStyle.fit_summary_panel(intro_panel, $UI/IntroLayer/OverlayRoot/IntroPanel/Margin,
+		intro_title, intro_body, intro_btn, width)
+
+
+func _set_top_icons_visible(v: bool) -> void:
+	if is_instance_valid(_top_icons_row):
+		_top_icons_row.visible = v
 
 
 func _on_intro_pressed() -> void:
@@ -332,30 +347,26 @@ func _show_summary() -> void:
 		_medal_icon.texture = medal_tex
 		_medal_icon.custom_minimum_size = Vector2(140, 140)
 		_medal_icon.modulate = Color(1,1,1,1)
+		_medal_icon.visible = true   # il popup "Donazione fallita" la nasconde
+	_set_top_icons_visible(true)
 
 	var needle_line := ""
 	if RunState.badge_precisione_ago:
-		needle_line = "🏅 Precisione Ago: PERFETTA — tutti i prelievi al primo tentativo!\n"
+		needle_line = "Precisione Ago: PERFETTA, tutti i prelievi al primo tentativo!\n"
 	else:
-		needle_line = "🏅 Precisione Ago: mancata — riprova e punta alla perfezione!\n"
-		
-	RunState.compute_final_score()
-	var medal_bonus_line := ""
-	if RunState.score_medal_bonus > 0:
-		medal_bonus_line = " (bonus medaglia +%d)" % RunState.score_medal_bonus
+		needle_line = "Precisione Ago: mancata, riprova e punta alla perfezione!\n"
 
+	RunState.compute_final_score()
+
+	# Solo il totale: i dettagli dei punti erano troppi
 	intro_title.text = "Stanza completata"
 	intro_body.text = \
-		"Medaglia: %s 🏅\n\n" % medal_name + \
+		"Medaglia: %s\n" % medal_name + \
 		needle_line + "\n" + \
 		"Donazioni completate: %d / %d\n" % [ok, total] + \
 		"Donazioni fallite: %d\n" % fail + \
 		"Errori totali: %d\n\n" % errors + \
-		"Difficoltà: %s\n" % RunState.DIFFICULTY_NAMES[RunState.difficulty] + \
-		"Etichette verificate: %d (+%d)\n" % [RunState.labels_verified, RunState.score_labels] + \
-		"Punti stanza: %d%s\n" % [RunState.score_final, medal_bonus_line] + \
-		"PUNTEGGIO TOTALE: %d\n" % RunState.score_main() + \
-		"Gioca la Sala Colazione per guadagnare altri punti!\n\n" + \
+		"PUNTEGGIO TOTALE: %d\n\n" % RunState.score_main() + \
 		_get_motivational_line(errors)
 
 	PlayGames.submit_score(RunState.score_main())
@@ -559,28 +570,16 @@ func _ensure_medal_icon() -> void:
 
 
 func _fit_panel_to_text() -> void:
-	intro_panel.custom_minimum_size = Vector2(940, 520)
-
-	intro_title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	intro_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-
-	intro_title.clip_text = false
-	intro_body.clip_text = false
-
-	var usable_w := intro_panel.custom_minimum_size.x - 60.0
-	intro_title.custom_minimum_size = Vector2(usable_w, 0)
-	intro_body.custom_minimum_size = Vector2(usable_w, 0)
-
-	intro_panel.queue_redraw()
+	_fit_overlay_panel(760.0)
 
 
 func _get_motivational_line(errors: int) -> String:
 	if errors == 0:
-		return "Perfetto! Hai gestito tutto al meglio: ogni donazione conta davvero. Continua così 💛"
+		return "Perfetto! Hai gestito tutto al meglio: ogni donazione conta davvero. Continua così!"
 	elif errors < 3:
-		return "Ottimo lavoro! Qualche imprevisto può capitare: l’importante è la sicurezza. Ci sei quasi 🤍"
+		return "Ottimo lavoro! Qualche imprevisto può capitare: l’importante è la sicurezza. Ci sei quasi."
 	else:
-		return "Non mollare! La donazione richiede attenzione e calma: riprova e migliora, un passo alla volta 🧡"
+		return "Non mollare! La donazione richiede attenzione e calma: riprova e migliora, un passo alla volta."
 
 
 func _show_fail_popup_like_summary(msg: String) -> void:
@@ -602,6 +601,8 @@ func _show_fail_popup_like_summary(msg: String) -> void:
 	intro_title.text = "Donazione fallita"
 	intro_body.text = msg
 	intro_btn.text = "OK"
+	_set_top_icons_visible(false)
+	_fit_overlay_panel(560.0)
 
 	if intro_btn.pressed.is_connected(_on_intro_pressed):
 		intro_btn.pressed.disconnect(_on_intro_pressed)

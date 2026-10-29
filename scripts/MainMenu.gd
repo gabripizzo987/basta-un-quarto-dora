@@ -345,9 +345,9 @@ func _on_button_pressed() -> void:
 var _difficulty_panel: Control = null
 
 const DIFFICULTY_INFO := [
-	["FACILE", "Puzzle piccoli e più tempo"],
-	["MEDIO", "L'esperienza classica"],
-	["DIFFICILE", "Puzzle grandi, poco tempo"],
+	["FACILE", "L'esperienza classica"],
+	["MEDIO", "Puzzle grandi, meno tempo"],
+	["DIFFICILE", "Due puzzle per ogni donatore"],
 ]
 
 func _show_difficulty_panel() -> void:
@@ -402,10 +402,8 @@ func _build_difficulty_panel() -> Control:
 	vbox.add_child(sep)
 
 	for i in DIFFICULTY_INFO.size():
-		var selected: bool = i == RunState.difficulty
-		var nc: Color = C_RED if selected else C_DARK_BTN
-		var hc: Color = C_RED_HOVER if selected else C_DARK_HOVER
-		var btn := _button(DIFFICULTY_INFO[i][0], nc, hc, nc.darkened(0.15), 360, 56, 20)
+		# tutti uguali: diventano rossi solo quando ci passi sopra o li premi
+		var btn := _button(DIFFICULTY_INFO[i][0], C_DARK_BTN, C_RED_HOVER, C_RED_PRESS, 360, 56, 20)
 		btn.pressed.connect(_on_difficulty_chosen.bind(i))
 		btn.mouse_entered.connect(_play_btn_hover)
 		var wrap := CenterContainer.new()

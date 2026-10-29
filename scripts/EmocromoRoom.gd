@@ -65,7 +65,6 @@ func _ready() -> void:
 	pressure_panel.accepted.connect(_on_decision_accept)
 	pressure_panel.rejected.connect(_on_decision_reject)
 	blood_minigame.done.connect(_on_blood_minigame_done)
-	blood_minigame.done.connect(_on_blood_minigame_done)
 	
 	analyzer_machine.body_entered.connect(_on_machine_body_entered)
 	analyzer_machine.body_exited.connect(_on_machine_body_exited)
@@ -86,6 +85,16 @@ func _ready() -> void:
 	print("SUMMARY BTN:", $SummaryLayer/SummaryPanel/Margin/VBox/ButtonsRow/Continue)
 	
 	_setup_manual_overlay()
+
+	# pannello introduttivo: stile unico e dimensione adattata al testo
+	# (il titolo lungo usciva dal bordo destro). Dopo un frame, quando i
+	# testi hanno gia' una larghezza.
+	await get_tree().process_frame
+	preload("res://scripts/UiStyle.gd").fit_summary_panel(
+		intro_panel, $IntroLayer/IntroPanel/Margin,
+		$IntroLayer/IntroPanel/Margin/VBox/Title,
+		$IntroLayer/IntroPanel/Margin/VBox/Body,
+		$IntroLayer/IntroPanel/Margin/VBox/ButtonsRow/Intro, 640.0)
 
 func _setup_manual_overlay() -> void:
 	var triage_ui := get_node_or_null("UI/TriageUI")

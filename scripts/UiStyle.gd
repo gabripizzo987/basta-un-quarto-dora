@@ -105,19 +105,37 @@ static func fit_summary_panel(panel: Control, margin: Control, title: Label, bod
 			margin.add_theme_constant_override(side, 20)
 		for side in ["margin_top", "margin_bottom"]:
 			margin.add_theme_constant_override(side, 18)
-	margin.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	margin.position = Vector2.ZERO
-	margin.reset_size()
+
+	# 1) pannello centrato con la larghezza giusta e il contenuto che lo riempie:
+	#    cosi' Godot impagina il testo (a capo compreso) alla larghezza vera
+	_place_centered(panel, width, panel.size.y if panel.size.y > 0 else 300.0)
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.custom_minimum_size = Vector2.ZERO
+	var was_alpha := panel.modulate.a
+	panel.modulate.a = 0.0   # niente "salto" visibile mentre si misura
+
+	# 2) dopo l'impaginazione misura l'altezza vera del contenuto
+	var tree := panel.get_tree()
+	if tree != null:
+		await tree.process_frame
+		await tree.process_frame
+	if not is_instance_valid(panel):
+		return
 	var sz := margin.get_combined_minimum_size()
+	var vp_h := panel.get_viewport_rect().size.y
 	var w := maxf(width, sz.x)
-	var h := sz.y
-	panel.custom_minimum_size = Vector2(w, h)
+	# mai piu' alto dello schermo: il pulsante deve restare sempre visibile
+	var h := clampf(sz.y, 80.0, vp_h - 32.0)
+	_place_centered(panel, w, h)
+	panel.modulate.a = was_alpha if was_alpha > 0.0 else 1.0
+
+
+static func _place_centered(panel: Control, w: float, h: float) -> void:
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left = -w * 0.5
 	panel.offset_right = w * 0.5
 	panel.offset_top = -h * 0.5
 	panel.offset_bottom = h * 0.5
-	margin.size = Vector2(w, h)
 
 
 ## Riordina un pannello gia' esistente (titolo opzionale, testo, pulsante)

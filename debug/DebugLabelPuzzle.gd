@@ -52,19 +52,23 @@ func _make_label(font_size: int, col: Color) -> Label:
 	return l
 
 
+## [lato, coppie, punti, tempo extra] del primo puzzle della serie.
 func _rules() -> Array:
 	var r: Dictionary = RunState.label_rules()
-	if _first_donor:
-		return [r.size_first, r.pairs_first, r.points, r.grace]
-	return [r.size, r.pairs, r.points, r.grace]
+	var seq: Array = RunState.label_sequence(_first_donor)
+	return [seq[0][0], seq[0][1], r.points, r.grace]
 
 
 func _describe() -> String:
 	var r := _rules()
-	return "%s - %s\ngriglia %dx%d, %d colori\n+%d punti, %ds extra" % [
+	var seq: Array = RunState.label_sequence(_first_donor)
+	var grids: Array[String] = []
+	for s in seq:
+		grids.append("%dx%d (%d colori)" % [s[0], s[0], s[1]])
+	return "%s - %s\n%s\n+%d punti a griglia, %ds extra" % [
 		RunState.DIFFICULTY_NAMES[RunState.difficulty],
 		"primo donatore" if _first_donor else "donatori successivi",
-		r[0], r[0], r[1], r[2], int(r[3])]
+		" + ".join(grids), r[2], int(r[3])]
 
 
 func _new_puzzle() -> void:

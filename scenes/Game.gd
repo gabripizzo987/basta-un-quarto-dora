@@ -286,25 +286,161 @@ func generate_donors(count: int, min_eligible: int) -> void:
 	if real_count > SLOT_CONFIG.size():
 		real_count = SLOT_CONFIG.size()
 
+	# quante tessere sanitarie "sbagliate" (dipende dalla difficolta')
+	var n_doc_issues := 0
+	match RunState.difficulty:
+		1: n_doc_issues = 1
+		2: n_doc_issues = rng.randi_range(1, 2)
+	n_doc_issues = mini(n_doc_issues, real_count - min_eligible)
+
 	# scegli quanti saranno idonei (tra min_eligible e real_count)
-	var target_eligible = rng.randi_range(min_eligible, real_count)
+	var target_eligible = rng.randi_range(min_eligible, real_count - n_doc_issues)
 
 	var flags = []
 	for i in range(real_count):
 		flags.append(i < target_eligible)
 	flags.shuffle()
 
+	# tra i NON idonei, alcuni lo sono solo per la tessera (clinicamente ok)
+	var doc_issue_slots: Array = []
+	for i in range(real_count):
+		if not flags[i] and doc_issue_slots.size() < n_doc_issues:
+			doc_issue_slots.append(i)
+
+	var used_surnames: Array = []
 	for i in range(real_count):
 		var must_be_eligible = flags[i]
 		var slot_cfg = SLOT_CONFIG[i]   # nome/sesso fissi per quello slot
+		var doc_issue: bool = doc_issue_slots.has(i)
 
-		var donor = generate_random_donor(must_be_eligible, slot_cfg)
+		var donor = generate_random_donor(must_be_eligible or doc_issue, slot_cfg)
 
-		if must_be_eligible:
+		if must_be_eligible or doc_issue:
 			while not is_donor_eligible(donor):
 				donor = generate_random_donor(true, slot_cfg)
 
+		# cognome + tessera sanitaria che combacia col modulo
+		var surname: String = SURNAMES[rng.randi() % SURNAMES.size()]
+		while used_surnames.has(surname):
+			surname = SURNAMES[rng.randi() % SURNAMES.size()]
+		used_surnames.append(surname)
+		donor["surname"] = surname
+		donor["doc"] = _make_document(donor)
+		donor["doc_issue"] = ""
+		if doc_issue:
+			_apply_doc_issue(donor, RunState.difficulty >= 2)
+
 		donors.append(donor)
+
+
+# ── TESSERA SANITARIA ────────────────────────────────────────────────────────
+# Il modulo e' quello che il donatore compila; la tessera e' il documento.
+# Il giocatore controlla che nome, sesso, eta' (dalla data di nascita) e
+# scadenza combacino. Se no il donatore va rimandato.
+
+const SURNAMES := ["Rossi", "Russo", "Ferrari", "Esposito", "Bianchi", "Romano",
+	"Colombo", "Ricci", "Marino", "Greco", "Bruno", "Gallo", "Conti", "Costa",
+	"Giordano", "Mancini", "Rizzo", "Lombardi", "Moretti", "Barbieri"]
+const OTHER_NAMES_M := ["Marco", "Luca", "Paolo", "Matteo", "Davide", "Simone"]
+const OTHER_NAMES_F := ["Giulia", "Sara", "Chiara", "Francesca", "Laura", "Marta"]
+const CF_MONTHS := "ABCDEHLMPRST"
+
+
+func today_dict() -> Dictionary:
+	return Time.get_date_dict_from_system()
+
+
+func format_date(d: int, m: int, y: int) -> String:
+	return "%02d/%02d/%04d" % [d, m, y]
+
+
+## Documento coerente con il modulo.
+func _make_document(donor: Dictionary) -> Dictionary:
+	var t := today_dict()
+	var bm := rng.randi_range(1, 12)
+	var bd := rng.randi_range(1, 28)
+	var by: int = int(t.year) - int(donor["age"])
+	# compleanno non ancora passato quest'anno -> nato un anno prima
+	if bm > int(t.month) or (bm == int(t.month) and bd > int(t.day)):
+		by -= 1
+	var exp_y: int = int(t.year) + rng.randi_range(1, 5)
+	var doc := {
+		"surname": String(donor["surname"]).to_upper(),
+		"name": String(donor["name"]).to_upper(),
+		"sex": donor["sex"],
+		"birth_d": bd, "birth_m": bm, "birth_y": by,
+		"exp_d": rng.randi_range(1, 28), "exp_m": rng.randi_range(1, 12), "exp_y": exp_y,
+	}
+	doc["cf"] = _codice_fiscale(doc)
+	return doc
+
+
+## Rende la tessera NON coerente. subtle = Difficile (errori piccoli).
+func _apply_doc_issue(donor: Dictionary, subtle: bool) -> void:
+	var doc: Dictionary = donor["doc"]
+	var t := today_dict()
+	var kinds := ["nome", "sesso", "eta", "scaduta"]
+	var kind: String = kinds[rng.randi() % kinds.size()]
+	match kind:
+		"nome":
+			if subtle:
+				# una lettera diversa nel cognome (es. ROSSI -> ROSI)
+				var s: String = doc.surname
+				var i := rng.randi_range(1, s.length() - 2)
+				doc.surname = s.substr(0, i) + s.substr(i + 1)
+			else:
+				var pool: Array = OTHER_NAMES_M if donor["sex"] == "M" else OTHER_NAMES_F
+				doc.name = String(pool[rng.randi() % pool.size()]).to_upper()
+		"sesso":
+			doc.sex = "F" if donor["sex"] == "M" else "M"
+		"eta":
+			# data di nascita che non torna con l'eta' scritta sul modulo
+			var shift := (1 if rng.randf() < 0.5 else -1) * (1 if subtle else rng.randi_range(5, 12))
+			doc.birth_y = int(doc.birth_y) + shift
+		"scaduta":
+			if subtle:
+				# scaduta da poco (il mese scorso)
+				var m := int(t.month) - 1
+				var y := int(t.year)
+				if m < 1:
+					m = 12
+					y -= 1
+				doc.exp_m = m
+				doc.exp_y = y
+			else:
+				doc.exp_y = int(t.year) - rng.randi_range(1, 3)
+	doc["cf"] = _codice_fiscale(doc)
+	donor["doc_issue"] = kind
+
+
+## Codice fiscale semplificato ma verosimile (lettere, anno, mese, giorno).
+func _codice_fiscale(doc: Dictionary) -> String:
+	var day: int = int(doc.birth_d) + (40 if doc.sex == "F" else 0)
+	var letters := "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	return _cf_part(doc.surname) + _cf_part(doc.name) \
+		+ "%02d" % (int(doc.birth_y) % 100) + CF_MONTHS[int(doc.birth_m) - 1] \
+		+ "%02d" % day + "H501" + letters[(int(doc.birth_y) + int(doc.birth_d)) % 26]
+
+
+## 3 lettere del codice fiscale: prima le consonanti, poi le vocali.
+func _cf_part(s: String) -> String:
+	var cons := ""
+	var vow := ""
+	for ch in s:
+		if "AEIOU".contains(ch):
+			vow += ch
+		elif ch >= "A" and ch <= "Z":
+			cons += ch
+	return (cons + vow + "XXX").substr(0, 3)
+
+
+func doc_issue_reason(donor: Dictionary) -> String:
+	match String(donor.get("doc_issue", "")):
+		"nome": return "Tessera sanitaria: il nome non corrisponde al modulo."
+		"sesso": return "Tessera sanitaria: il sesso non corrisponde al modulo."
+		"eta": return "Tessera sanitaria: la data di nascita non corrisponde all'età dichiarata."
+		"scaduta": return "Tessera sanitaria scaduta: serve un documento valido."
+	return ""
 
 
 func generate_random_donor(must_be_eligible: bool, slot_cfg: Dictionary) -> Dictionary:
@@ -405,7 +541,7 @@ func show_current_donor() -> void:
 		return
 
 	var donor = donors[current_donor_index]
-	label_name.text = donor["name"]
+	label_name.text = "%s %s" % [donor["name"], donor.get("surname", "")]
 
 	var sex_txt  := "Maschio" if donor["sex"] == "M" else "Femmina"
 	var tattoo_txt := ("Nessun tatuaggio" if not donor["has_tattoo"]
@@ -435,6 +571,9 @@ func show_current_donor() -> void:
 	
 # LOGICA DI IDONEITÀ
 func is_donor_eligible(donor: Dictionary) -> bool:
+	if String(donor.get("doc_issue", "")) != "":
+		return false
+
 	if donor["age"] < 18:
 		return false
 
@@ -462,6 +601,9 @@ func is_donor_eligible(donor: Dictionary) -> bool:
 
 
 func get_ineligibility_reason(donor: Dictionary) -> String:
+	if doc_issue_reason(donor) != "":
+		return doc_issue_reason(donor)
+
 	if donor["age"] < 18:
 		return "Età inferiore a 18 anni."
 
@@ -780,6 +922,10 @@ func show_error_popup_many(reasons: Array[String]) -> void:
 
 func get_ineligibility_reasons(donor: Dictionary) -> Array[String]:
 	var reasons: Array[String] = []
+
+	var doc_reason := doc_issue_reason(donor)
+	if doc_reason != "":
+		reasons.append(doc_reason)
 
 	if donor["age"] < 18:
 		reasons.append("Età inferiore a 18 anni.")

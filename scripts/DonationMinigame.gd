@@ -160,35 +160,50 @@ func _ready() -> void:
 # =============================
 const LABEL_PUZZLE_SCRIPT := preload("res://scripts/LabelMatchPuzzle.gd")
 var label_puzzle: Control = null
-var puzzle_size: int = 5
-var puzzle_pairs: int = 4
 var puzzle_points: int = 50
 var puzzle_grace: float = 9.0      # secondi extra a sacca piena per finire le etichette
+
+## Puzzle da completare per questo donatore: lista di [lato, coppie].
+## In Difficile sono due di fila.
+var _puzzle_seq: Array = [[5, 4]]
+var _puzzle_index: int = 0
+var _puzzle_layer: CanvasLayer = null
+var _puzzle_paused: bool = false
+var _swapping: bool = false
 
 var _grace_left: float = -1.0      # >= 0 mentre si aspetta il puzzle a sacca piena
 var _puzzle_solved_at: float = -1.0
 var _fail_reason: String = "flow"
 
-## Chiamare prima di add_child.
+## Un solo puzzle (usato dalla scena di debug). Chiamare prima di add_child.
 func set_puzzle_difficulty(grid_size: int, pairs: int, points: int = 50, grace: float = 9.0) -> void:
-	puzzle_size = grid_size
-	puzzle_pairs = pairs
+	set_puzzle_sequence([[grid_size, pairs]], points, grace)
+
+
+## Piu' puzzle di fila. Chiamare prima di add_child.
+func set_puzzle_sequence(seq: Array, points: int = 50, grace: float = 9.0) -> void:
+	_puzzle_seq = seq.duplicate(true) if not seq.is_empty() else [[5, 4]]
 	puzzle_points = points
 	puzzle_grace = grace
 
 
-## Imposta il puzzle dalle regole della difficolta' scelta nel menu.
+## Imposta i puzzle dalle regole della difficolta' scelta nel menu.
 func set_puzzle_from_rules(first_donor: bool) -> void:
 	var r: Dictionary = RunState.label_rules()
-	if first_donor:
-		set_puzzle_difficulty(r.size_first, r.pairs_first, r.points, r.grace)
-	else:
-		set_puzzle_difficulty(r.size, r.pairs, r.points, r.grace)
+	set_puzzle_sequence(RunState.label_sequence(first_donor), r.points, r.grace)
 
 
-## Sacca piena: la donazione e' completa solo con le etichette verificate.
+func _all_puzzles_solved() -> bool:
+	return (not _swapping) and _puzzle_index >= _puzzle_seq.size() - 1 \
+		and is_instance_valid(label_puzzle) and label_puzzle.is_solved()
+
+
+## Sacca piena: la donazione e' completa solo con tutte le etichette verificate.
 func _process_bag_full(delta: float) -> void:
-	if not is_instance_valid(label_puzzle) or label_puzzle.is_solved():
+	if not is_instance_valid(label_puzzle) and not _swapping:
+		_finish(true)
+		return
+	if _all_puzzles_solved():
 		if _puzzle_solved_at < 0.0:
 			_puzzle_solved_at = t_total
 		t_total += delta
@@ -202,12 +217,13 @@ func _process_bag_full(delta: float) -> void:
 		if pump_active:
 			_end_pump()
 		hand.visible = false
-		prompt.visible = true
+		# niente testo sotto la sacca: basta la barra rossa dentro il puzzle
+		prompt.visible = false
 		_set_puzzle_paused(false)
 
 	_grace_left -= delta
-	prompt.text = "Sacca piena! Verifica le etichette: %d" % maxi(0, ceili(_grace_left))
-	label_puzzle.set_countdown(_grace_left, puzzle_grace)
+	if is_instance_valid(label_puzzle):
+		label_puzzle.set_countdown(_grace_left, puzzle_grace)
 	if _grace_left <= 0.0:
 		_fail_reason = "labels"
 		_finish(false)
@@ -217,19 +233,40 @@ func _spawn_label_puzzle() -> void:
 	# Layer proprio: la scena della donazione e' scalata (0.63) e il puzzle
 	# deve restare a grandezza piena. Sta sotto il tocco della mano (120)
 	# e sotto il tutorial (150), quindi non li blocca mai.
-	var layer := CanvasLayer.new()
-	layer.name = "LabelPuzzleLayer"
-	layer.layer = 100
-	add_child(layer)
+	_puzzle_layer = CanvasLayer.new()
+	_puzzle_layer.name = "LabelPuzzleLayer"
+	_puzzle_layer.layer = 100
+	add_child(_puzzle_layer)
+	_puzzle_index = 0
+	_create_puzzle_for_index()
+	get_viewport().size_changed.connect(_layout_label_puzzle)
 
+
+func _create_puzzle_for_index() -> void:
+	var spec: Array = _puzzle_seq[_puzzle_index]
 	label_puzzle = LABEL_PUZZLE_SCRIPT.new()
 	label_puzzle.name = "LabelMatchPuzzle"
-	label_puzzle.setup(puzzle_size, puzzle_pairs)
+	label_puzzle.setup(int(spec[0]), int(spec[1]))
 	label_puzzle.points = puzzle_points
-	layer.add_child(label_puzzle)
+	label_puzzle.set_stage(_puzzle_index + 1, _puzzle_seq.size())
+	_puzzle_layer.add_child(label_puzzle)
 	label_puzzle.solved.connect(_on_label_puzzle_solved)
-	get_viewport().size_changed.connect(_layout_label_puzzle)
+	label_puzzle.set_paused(_puzzle_paused)
 	call_deferred("_layout_label_puzzle")
+
+
+## Dopo il timbro "VERIFICATE" arriva il puzzle successivo, nello stesso posto.
+func _swap_to_next_puzzle() -> void:
+	if not is_inside_tree():
+		return
+	if is_instance_valid(label_puzzle):
+		# toglierlo subito dall'albero: cosi' il nuovo puo' avere lo stesso nome
+		if label_puzzle.get_parent() != null:
+			label_puzzle.get_parent().remove_child(label_puzzle)
+		label_puzzle.queue_free()
+	_puzzle_index += 1
+	_create_puzzle_for_index()
+	_swapping = false
 
 
 func _layout_label_puzzle() -> void:
@@ -247,6 +284,7 @@ func _layout_label_puzzle() -> void:
 
 
 func _set_puzzle_paused(p: bool) -> void:
+	_puzzle_paused = p
 	if is_instance_valid(label_puzzle):
 		label_puzzle.set_paused(p)
 
@@ -254,6 +292,11 @@ func _set_puzzle_paused(p: bool) -> void:
 func _on_label_puzzle_solved() -> void:
 	RunState.labels_verified += 1
 	RunState.score_labels += puzzle_points
+	if _puzzle_index < _puzzle_seq.size() - 1:
+		# ne manca ancora uno: piccola pausa per vedere il timbro, poi il prossimo
+		_swapping = true
+		get_tree().create_timer(0.9).timeout.connect(_swap_to_next_puzzle)
+		return
 	_puzzle_solved_at = t_total
 	if is_instance_valid(label_puzzle):
 		label_puzzle.set_countdown(-1.0, 1.0)
@@ -441,9 +484,8 @@ func _open_tutorial() -> void:
 	_tutorial_open = true
 	_set_puzzle_paused(true)
 
-	var C_BG    := Color(0.050, 0.018, 0.022)
-	var C_RED   := Color(0.750, 0.135, 0.110)
-	var C_WARN  := Color(0.28, 0.06, 0.04)
+	# Stesso stile di tutti gli altri pannelli (UiStyle)
+	var UiStyle := preload("res://scripts/UiStyle.gd")
 
 	var layer := CanvasLayer.new()
 	layer.layer = 150
@@ -456,10 +498,9 @@ func _open_tutorial() -> void:
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
 	layer.add_child(root)
 
-	# Dim overlay
 	var dimm := ColorRect.new()
 	dimm.set_anchors_preset(Control.PRESET_FULL_RECT)
-	dimm.color = Color(0.0, 0.0, 0.0, 0.82)
+	dimm.color = Color(0.0, 0.0, 0.0, 0.6)
 	dimm.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(dimm)
 
@@ -467,126 +508,47 @@ func _open_tutorial() -> void:
 	center_box.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(center_box)
 
-	# Main panel
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(740, 0)
+	panel.custom_minimum_size = Vector2(660, 0)
+	UiStyle.style_panel(panel)
 	center_box.add_child(panel)
 
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = C_BG
-	sb.border_color = C_RED
-	sb.border_width_left = 3; sb.border_width_right  = 3
-	sb.border_width_top  = 3; sb.border_width_bottom = 3
-	sb.set_corner_radius_all(16)
-	panel.add_theme_stylebox_override("panel", sb)
-
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left",   34)
-	margin.add_theme_constant_override("margin_right",  34)
-	margin.add_theme_constant_override("margin_top",    26)
-	margin.add_theme_constant_override("margin_bottom", 26)
+	for side in ["margin_left", "margin_right"]:
+		margin.add_theme_constant_override(side, 24)
+	for side in ["margin_top", "margin_bottom"]:
+		margin.add_theme_constant_override(side, 20)
 	panel.add_child(margin)
 
 	var vb := VBoxContainer.new()
 	vb.add_theme_constant_override("separation", 14)
 	margin.add_child(vb)
 
-	# ── Title ────────────────────────────────────────────────────────────────
 	var title := Label.new()
-	title.text = "DONAZIONE DEL SANGUE"
-	title.add_theme_color_override("font_color", C_RED)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.text = "Come si dona"
+	UiStyle.style_title(title)
 	vb.add_child(title)
 
-	# Top separator
-	var sep1 := _make_sep(C_RED, 1.0)
-	vb.add_child(sep1)
+	var body := Label.new()
+	body.text = \
+		"• La sacca si riempie da sola nel tempo.\n" + \
+		"• Intanto collega sacche e provette dello stesso colore: è il controllo etichette. Senza etichette verificate la donazione non vale.\n" + \
+		"• Quando compare la mano, tocca velocemente lo schermo: se reagisci troppo tardi, la donazione fallisce."
+	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	body.custom_minimum_size = Vector2(612, 0)
+	UiStyle.style_body(body, 18)
+	vb.add_child(body)
 
-	# ── Bullet: bag fills automatically ──────────────────────────────────────
-	vb.add_child(_make_tut_bullet(
-		"–", "La sacca si riempie da sola nel tempo.",
-		Color(0.40, 0.90, 0.40)))
-
-	# ── Bullet: minigioco etichette ──────────────────────────────────────────
-	vb.add_child(_make_tut_bullet(
-		"–", "Intanto collega sacche e provette dello stesso colore: è il controllo etichette!",
-		Color(1.0, 0.81, 0.22)))
-
-	# ── Warning box: TOUCH instruction ───────────────────────────────────────
-	var warn_panel := PanelContainer.new()
-	var wsb := StyleBoxFlat.new()
-	wsb.bg_color = C_WARN
-	wsb.border_color = C_RED
-	wsb.border_width_left = 2; wsb.border_width_right  = 2
-	wsb.border_width_top  = 2; wsb.border_width_bottom = 2
-	wsb.set_corner_radius_all(10)
-	warn_panel.add_theme_stylebox_override("panel", wsb)
-
-	var wm := MarginContainer.new()
-	wm.add_theme_constant_override("margin_left",  16)
-	wm.add_theme_constant_override("margin_right", 16)
-	wm.add_theme_constant_override("margin_top",   10)
-	wm.add_theme_constant_override("margin_bottom",10)
-	warn_panel.add_child(wm)
-
-	var wvb := VBoxContainer.new()
-	wvb.add_theme_constant_override("separation", 5)
-	wm.add_child(wvb)
-
-	var warn_title_lbl := Label.new()
-	warn_title_lbl.text = "QUANDO COMPARE LA MANO:"
-	warn_title_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.20))
-	warn_title_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	wvb.add_child(warn_title_lbl)
-
-	var warn_body_lbl := Label.new()
-	warn_body_lbl.text = "Tocca velocemente lo schermo!"
-	warn_body_lbl.add_theme_color_override("font_color", Color.WHITE)
-	warn_body_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	wvb.add_child(warn_body_lbl)
-
-	vb.add_child(warn_panel)
-
-	# ── Bullet: too slow = fail ───────────────────────────────────────────────
-	vb.add_child(_make_tut_bullet(
-		"–", "Se reagisci troppo tardi, la donazione fallisce.",
-		Color(1.0, 0.40, 0.35)))
-
-	# Bottom separator
-	var sep2 := _make_sep(Color(C_RED.r, C_RED.g, C_RED.b, 0.45), 1.0)
-	vb.add_child(sep2)
-
-	# ── Start button ─────────────────────────────────────────────────────────
-	var btn_wrap := CenterContainer.new()
-	vb.add_child(btn_wrap)
-
+	var row := HBoxContainer.new()
+	vb.add_child(row)
 	var btn := Button.new()
-	btn.text = "INIZIA!"
-	btn.custom_minimum_size = Vector2(210, 54)
-	btn.focus_mode = Control.FOCUS_NONE
-
-	for pair in [[&"normal", C_RED], [&"hover", C_RED.lightened(0.15)], [&"pressed", C_RED.darkened(0.20)]]:
-		var bsb := StyleBoxFlat.new()
-		bsb.bg_color = pair[1] as Color
-		bsb.set_corner_radius_all(12)
-		bsb.border_width_left = 1; bsb.border_width_right  = 1
-		bsb.border_width_top  = 1; bsb.border_width_bottom = 1
-		bsb.border_color = (pair[1] as Color).lightened(0.30)
-		btn.add_theme_stylebox_override(pair[0], bsb)
-	btn.add_theme_stylebox_override("focus", StyleBoxFlat.new())
-	btn.add_theme_color_override("font_color", Color.WHITE)
-	btn_wrap.add_child(btn)
+	btn.text = "Inizia"
+	UiStyle.style_button(btn, 18)
+	btn.custom_minimum_size = Vector2(220, 52)
+	row.add_child(btn)
 	btn.pressed.connect(_close_tutorial)
 
-	# Apply pixel font to the whole overlay, then re-override key sizes
-	_apply_pixel_font_recursive(root)
-	title.add_theme_font_size_override("font_size", tutorial_title_size + 2)
-	warn_title_lbl.add_theme_font_size_override("font_size", tutorial_body_size - 2)
-	warn_body_lbl.add_theme_font_size_override("font_size", tutorial_body_size + 2)
-	btn.add_theme_font_size_override("font_size", tutorial_title_size)
-
 	get_viewport().gui_release_focus()
-	btn.grab_focus()
 
 
 func _make_tut_bullet(icon_text: String, body_text: String, icon_color: Color) -> HBoxContainer:

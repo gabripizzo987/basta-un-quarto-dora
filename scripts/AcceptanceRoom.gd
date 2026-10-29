@@ -4,6 +4,8 @@ const UiStyle := preload("res://scripts/UiStyle.gd")
 const TAP_HAND := "res://assets/ui/tap_hand.png"
 
 var _dpad: CanvasLayer = null
+var _health_card: Control = null
+var _health_card_index: int = -1
 var _demo_layer: CanvasLayer = null
 var _demo_tween: Tween = null
 
@@ -47,6 +49,17 @@ var arrow_tween: Tween = null
 func _ready() -> void:
 	_dpad = preload("res://scripts/VirtualDpad.gd").new()
 	add_child(_dpad)
+
+	# tessera sanitaria: compare a sinistra mentre si decide
+	# (layer proprio sopra la stanza: niente oggetti del mondo che la coprono)
+	var hc_layer := CanvasLayer.new()
+	hc_layer.name = "HealthCardLayer"
+	hc_layer.layer = 5
+	add_child(hc_layer)
+	_health_card = preload("res://scripts/HealthCard.gd").new()
+	_health_card.name = "HealthCard"
+	_health_card.visible = false
+	hc_layer.add_child(_health_card)
 	game_ui.connect("all_donors_completed", Callable(self, "_on_all_donors_completed"))
 	call_deferred("_resize_interact_prompt")
 
@@ -147,7 +160,7 @@ func _setup_tutorial_drag() -> void:
 	if tutorial_panel:
 		var body := tutorial_panel.get_node_or_null("Label") as Label
 		if body != null:
-			body.text = "Tieni premuto sul donatore e trascinalo sulla sacca giusta: IDONEO oppure NON IDONEO."
+			body.text = "Controlla che la tessera sanitaria corrisponda al modulo, poi tieni premuto sul donatore e trascinalo sulla sacca giusta: IDONEO oppure NON IDONEO."
 		if tutorial_ok:
 			tutorial_ok.text = "Ho capito"
 		UiStyle.rebuild_panel(tutorial_panel, "Come si decide", body, tutorial_ok, 440)
@@ -340,6 +353,22 @@ func _layout_donor_card() -> void:
 	card.offset_bottom = -16.0
 
 
+## Tessera sanitaria a sinistra, in alto, per il donatore che stai valutando.
+func _update_health_card(show_it: bool) -> void:
+	if _health_card == null:
+		return
+	var idx: int = int(game_ui.get("current_donor_index"))
+	if show_it and idx >= 0 and idx < game_ui.donors.size():
+		if idx != _health_card_index:
+			_health_card_index = idx
+			_health_card.set_donor(game_ui.donors[idx])
+		_health_card.position = Vector2(16, 16)
+		_health_card.visible = true
+	else:
+		_health_card.visible = false
+		_health_card_index = -1
+
+
 ## La scheda e' alta quanto il suo contenuto (non arriva fino in fondo vuota).
 func _fit_card_height(card: Control) -> void:
 	var content := card.get_node_or_null("ContentVBox") as Control
@@ -364,6 +393,7 @@ func _process(_delta: float) -> void:
 		if card.visible:
 			_fit_card_height(card)
 		_card_was_visible = card.visible
+		_update_health_card(card.visible)
 	if _dpad == null:
 		return
 	var busy: bool = (game_ui.has_method("is_triage_active") and game_ui.is_triage_active()) \
