@@ -12,9 +12,9 @@ signal signed_in_changed(is_signed_in: bool)
 ## (Play Games Services -> Classifiche), nell'ordine FACILE, MEDIO, DIFFICILE.
 ## Lasciare "" finche' la classifica non esiste: quella difficolta' non invia punteggi.
 const LEADERBOARD_IDS: Array[String] = [
-	"",                     # FACILE    (da creare)
-	"CgkI3bjJ188fEAIQAQ",   # MEDIO     (la classifica "Punteggio" gia' esistente)
-	"",                     # DIFFICILE (da creare)
+	"CgkI3bjJ188fEAIQAw",   # FACILE
+	"CgkI3bjJ188fEAIQAQ",   # MEDIO
+	"CgkI3bjJ188fEAIQBA",   # DIFFICILE
 ]
 
 const PLUGIN_NAME := "GodotPlayGameServices"
