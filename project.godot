@@ -12,7 +12,7 @@ config_version=5
 
 config/name="BastaUnQuartoDora"
 run/main_scene="uid://cxw474y0t7gt5"
-config/features=PackedStringArray("4.4", "Forward Plus")
+config/features=PackedStringArray("4.5", "Forward Plus")
 boot_splash/bg_color=Color(0.05, 0.018, 0.025, 1)
 boot_splash/fullsize=false
 boot_splash/image="res://assets/ui/boot_splash.png"
