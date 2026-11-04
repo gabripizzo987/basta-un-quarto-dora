@@ -6,6 +6,7 @@ signal finished()
 #  CONSTANTS
 # ══════════════════════════════════════════════════════════════════════════════
 
+const UiStyle := preload("res://scripts/UiStyle.gd")
 const PIXEL_FONT      := "res://fonts/PixelOperator8.ttf"
 const GAME_DURATION   := 38.0
 const DECAY_PER_SEC   := 0.07
@@ -52,7 +53,7 @@ const DONOR_COLORS: Array = [
 	Color(0.72, 0.35, 0.88),
 ]
 
-const C_BG     := Color(0.04, 0.03, 0.08)
+const C_BG     := Color(0.07, 0.07, 0.09)
 const C_ARENA  := Color(0.07, 0.05, 0.12)
 const C_PANEL  := Color(0.06, 0.05, 0.02)
 const C_BORDER := Color(0.85, 0.72, 0.20)
@@ -82,6 +83,7 @@ class DonorState:
 	var hp_max_w:   float = 100.0
 	var bubble:     Control
 	var bubble_lbl: Label
+	var bubble_icon: TextureRect
 	var anim_tw:    Tween
 
 
@@ -113,7 +115,6 @@ var _score_lbl:   Label     = null
 var _timer_lbl:   Label     = null
 var _timer_fill:  ColorRect = null
 var _timer_max_w: float     = 0.0
-var _req_lbl:     Label     = null
 
 var _vp: Vector2 = Vector2.ZERO
 var _pf: Font    = null
@@ -128,11 +129,30 @@ var _type_chars: float = 0.0
 #  SETUP / READY
 # ══════════════════════════════════════════════════════════════════════════════
 
+## Sempre 5 donatori seduti (uguale per tutti): se ne arrivano meno si
+## completa con i personaggi del gioco, se di piu' si tengono i primi 5.
+const BREAKFAST_DONORS := 5
+const DEFAULT_DONORS := ["Gabriele", "Claudio", "Daniele", "Anna", "Elisa"]
+
 func setup(donors: Array) -> void:
 	# Accetta sia Array[String] sia Array[Dictionary{name,sprite_idx}]
 	_donors = donors.duplicate()
-	if _donors.is_empty():
-		_donors = [{"name": "Donatore", "sprite_idx": 0}]
+	_fill_to_five()
+
+
+func _fill_to_five() -> void:
+	if _donors.size() > BREAKFAST_DONORS:
+		_donors.resize(BREAKFAST_DONORS)
+	var used_sprites: Array = []
+	for e in _donors:
+		if e is Dictionary:
+			used_sprites.append(int(e.get("sprite_idx", -1)))
+	var i := 0
+	while _donors.size() < BREAKFAST_DONORS and i < DEFAULT_DONORS.size():
+		if not used_sprites.has(i):
+			_donors.append({"name": DEFAULT_DONORS[i], "sprite_idx": i})
+			used_sprites.append(i)
+		i += 1
 
 
 func _ready() -> void:
@@ -148,8 +168,7 @@ func _ready() -> void:
 	size = _vp
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	if _donors.is_empty():
-		_donors = [{"name": "Donatore", "sprite_idx": 0}]
+	_fill_to_five()
 
 	# Genera le texture pixel-art PRIMA dell'intro (sicuro su Android export)
 	_make_item_textures()
@@ -173,14 +192,14 @@ func _build_intro() -> void:
 	add_child(bg)
 
 	# Titolo centrato in alto
-	var title := _lbl("SALA COLAZIONE", 28, C_GOLD, true)
+	var title := _lbl("SALA COLAZIONE", 28, UiStyle.TITLE, true)
 	title.position = Vector2(0, _vp.y * 0.12)
 	title.size = Vector2(_vp.x, 40)
 	add_child(title)
 
 	# Separatore
 	var sep := ColorRect.new()
-	sep.color = C_BORDER
+	sep.color = UiStyle.PANEL_BORDER
 	sep.size = Vector2(_vp.x * 0.6, 2)
 	sep.position = Vector2(_vp.x * 0.2, _vp.y * 0.12 + 48)
 	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -192,7 +211,7 @@ func _build_intro() -> void:
 	var box_x := (_vp.x - box_w) * 0.5
 	var box_y := _vp.y * 0.45
 
-	var dbox := _make_panel(Vector2(box_x, box_y), Vector2(box_w, box_h), C_PANEL, C_BORDER, 3)
+	var dbox := _ui_panel(Vector2(box_x, box_y), Vector2(box_w, box_h), 14)
 	add_child(dbox)
 
 	var dm := MarginContainer.new()
@@ -207,7 +226,7 @@ func _build_intro() -> void:
 	dm.add_child(_dial_lbl)
 
 	# "▼ tocca per continuare" lampeggiante in basso a destra del box
-	var tap := _lbl("▼  tocca per continuare", 14, C_GOLD, false)
+	var tap := _lbl("▼  tocca per continuare", 14, UiStyle.TEXT_MUTED, false)
 	tap.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	tap.position = Vector2(12, box_h - 36)
 	tap.size = Vector2(box_w - 24, 26)
@@ -304,9 +323,7 @@ func _build_game_ui() -> void:
 	var W := _vp.x
 	var H := _vp.y
 
-	# ── Sfondi ────────────────────────────────────────────────────────────────
-	var arena_h := H * 0.61
-
+	# ── Sfondo: stesso tono scuro dei pannelli del gioco ──────────────────────
 	var bg_full := ColorRect.new()
 	bg_full.position = Vector2.ZERO
 	bg_full.size = Vector2(W, H)
@@ -314,143 +331,102 @@ func _build_game_ui() -> void:
 	bg_full.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg_full)
 
-	var bg_arena := ColorRect.new()
-	bg_arena.position = Vector2.ZERO
-	bg_arena.size = Vector2(W, arena_h)
-	bg_arena.color = C_ARENA
-	bg_arena.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg_arena)
+	# ── Barra in alto: tempo a sinistra, titolo al centro, punti a destra ─────
+	var top_h := 64.0
+	add_child(_ui_panel(Vector2(12, 10), Vector2(W - 24, top_h - 14), 10))
 
-	# Separatore oro
-	var sep := ColorRect.new()
-	sep.position = Vector2(0, arena_h)
-	sep.size = Vector2(W, 4)
-	sep.color = C_BORDER
-	sep.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(sep)
-
-	# ── Top bar timer + punti ──────────────────────────────────────────────────
-	var top_h := 44.0
-	var top_bg := ColorRect.new()
-	top_bg.position = Vector2.ZERO
-	top_bg.size = Vector2(W, top_h)
-	top_bg.color = Color(0.02, 0.01, 0.06)
-	top_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(top_bg)
-
-	_timer_max_w = W * 0.46
+	_timer_max_w = minf(W * 0.24, 300.0)
 	var tbg := ColorRect.new()
-	tbg.position = Vector2(10, 9)
-	tbg.size = Vector2(_timer_max_w, 26)
-	tbg.color = Color(0.12, 0.09, 0.05)
+	tbg.position = Vector2(30, 23)
+	tbg.size = Vector2(_timer_max_w, 22)
+	tbg.color = Color(0.07, 0.07, 0.09)
 	tbg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(tbg)
 
 	_timer_fill = ColorRect.new()
-	_timer_fill.position = Vector2(10, 9)
-	_timer_fill.size = Vector2(_timer_max_w, 26)
+	_timer_fill.position = tbg.position
+	_timer_fill.size = tbg.size
 	_timer_fill.color = C_HP_OK
 	_timer_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_timer_fill)
 
-	_timer_lbl = _lbl("70s", 16, C_WHITE, false)
-	_timer_lbl.position = Vector2(16, 11)
+	_timer_lbl = _lbl("%ds" % int(GAME_DURATION), 16, C_WHITE, false)
+	_timer_lbl.position = Vector2(tbg.position.x + _timer_max_w + 12, 25)
 	add_child(_timer_lbl)
 
+	var title := _lbl("SALA COLAZIONE", 22, UiStyle.TITLE, true)
+	title.position = Vector2(0, 22)
+	title.size = Vector2(W, 26)
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(title)
+
 	_score_lbl = _lbl("PUNTI: 0", 18, C_GOLD, false)
-	_score_lbl.position = Vector2(W * 0.55, 11)
+	_score_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	_score_lbl.position = Vector2(W - 250, 25)
+	_score_lbl.size = Vector2(220, 24)
 	add_child(_score_lbl)
 
-	# ── Donor cards in arena ──────────────────────────────────────────────────
+	# ── Riga in basso: i rinfreschi in fila orizzontale ───────────────────────
+	var n_items := ITEMS.size()
+	var item_gap := 20.0
+	var item_w := minf(200.0, (W - 48.0 - item_gap * (n_items - 1)) / float(n_items))
+	var item_h := 136.0
+	var items_total := item_w * n_items + item_gap * (n_items - 1)
+	var items_x := (W - items_total) * 0.5
+	var items_y := H - item_h - 18.0
+
+	_item_cards.clear()
+	for i in n_items:
+		var card := _build_item_card(ITEMS[i], i,
+			Vector2(items_x + i * (item_w + item_gap), items_y), Vector2(item_w, item_h))
+		add_child(card)
+		_item_cards.append(card)
+		card.gui_input.connect(_on_item_gui.bind(i))
+
+	# ── Donatori: fumetto sopra, carta sotto, al centro dello spazio libero ───
 	var n := _states.size()
-	var margin_sides := 24.0
-	var gap := 12.0
-	var card_w := (W - margin_sides * 2.0 - gap * (n - 1)) / float(n)
-	card_w = minf(card_w, 160.0)
+	var gap := 18.0
+	var card_w := minf(210.0, (W - 48.0 - gap * (n - 1)) / float(n))
+	var bubble_h := 74.0
+	var free_top := top_h + 6.0
+	var free_bot := items_y - 20.0
+	var card_h := clampf(free_bot - free_top - bubble_h - 16.0, 150.0, 300.0)
+	var block_h := bubble_h + 16.0 + card_h
+	var card_y := free_top + maxf(0.0, (free_bot - free_top - block_h) * 0.5) + bubble_h + 16.0
 	var total_w := card_w * n + gap * (n - 1)
 	var start_x := (W - total_w) * 0.5
-	var card_y := top_h + 112.0         # riserva spazio per le bubble (più grandi) sopra
-	var card_h := arena_h - card_y - 8.0
 
 	for i in n:
 		var ds: DonorState = _states[i]
-		var cx := start_x + i * (card_w + gap)
-		ds.card = _build_donor_card(ds, Vector2(cx, card_y), Vector2(card_w, card_h))
+		ds.card = _build_donor_card(ds, Vector2(start_x + i * (card_w + gap), card_y),
+			Vector2(card_w, card_h), bubble_h)
 		add_child(ds.card)
 
-	# ── Bottom: dialogo sx + item tray dx ─────────────────────────────────────
-	var bot_y  := arena_h + 4.0
-	var bot_h  := H - bot_y
-	var dial_w := W * 0.46
-	var tray_x := dial_w + 12.0
-	var tray_w := W - tray_x - 8.0
 
-	# Box dialogo
-	var dbox := _make_panel(
-		Vector2(8, bot_y + 6),
-		Vector2(dial_w - 4, bot_h - 14),
-		C_PANEL, C_BORDER, 3)
-	add_child(dbox)
-
-	var dm := MarginContainer.new()
-	dm.position = Vector2(14, 10)
-	dm.size = Vector2(dial_w - 32, bot_h - 34)
-	dbox.add_child(dm)
-
-	_req_lbl = _lbl("Aspetta la\nrichiesta...", 21, C_WHITE, false)
-	_req_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_req_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_req_lbl.size_flags_vertical   = Control.SIZE_EXPAND_FILL
-	dm.add_child(_req_lbl)
-
-	# Item tray 2×2
-	_item_cards.clear()
-	var cell_w := (tray_w - 8.0) * 0.5
-	var cell_h := (bot_h - 16.0) * 0.5
-
-	for i in ITEMS.size():
-		var item: Dictionary = ITEMS[i]
-		var col := i % 2
-		var row := i / 2
-		var ix := tray_x + col * (cell_w + 8)
-		var iy := bot_y + 6 + row * (cell_h + 8)
-
-		var card := _build_item_card(item, i, Vector2(ix, iy), Vector2(cell_w, cell_h))
-		add_child(card)
-		_item_cards.append(card)
-
-		card.gui_input.connect(_on_item_gui.bind(i))
+## Pannello nello stile unico del gioco (UiStyle).
+func _ui_panel(pos: Vector2, sz: Vector2, radius: int = 12) -> Panel:
+	var p := Panel.new()
+	p.position = pos
+	p.size = sz
+	p.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	p.add_theme_stylebox_override("panel", UiStyle.panel_box(radius))
+	return p
 
 
-func _build_donor_card(ds: DonorState, pos: Vector2, sz: Vector2) -> Control:
+func _build_donor_card(ds: DonorState, pos: Vector2, sz: Vector2, bubble_h: float) -> Control:
 	var card := Control.new()
 	card.position = pos
 	card.size = sz
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
 
-	# Pannello sfondo
-	var panel := Panel.new()
-	panel.position = Vector2.ZERO
-	panel.size = sz
-	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var psb := StyleBoxFlat.new()
-	psb.bg_color = Color(0.08, 0.06, 0.14)
-	psb.border_color = ds.color.darkened(0.25)
-	psb.border_width_left = 2; psb.border_width_right  = 2
-	psb.border_width_top  = 2; psb.border_width_bottom = 2
-	psb.set_corner_radius_all(8)
-	panel.add_theme_stylebox_override("panel", psb)
-	card.add_child(panel)
-
-	# Sprite del donatore (stesso spritesheet usato in gioco)
-	var av_sz := minf(sz.x * 0.62, 72.0)
-	var av_x  := (sz.x - av_sz) * 0.5
-	var av_y  := 6.0
-
+	card.add_child(_ui_panel(Vector2.ZERO, sz, 12))
+	# Avatar grande (stesso spritesheet usato in gioco)
+	var av_sz := minf(sz.x * 0.82, sz.y - 74.0)
 	var sheet_path: String = DONOR_SHEETS[ds.sprite_idx % DONOR_SHEETS.size()]
 	var tex_rect := TextureRect.new()
-	tex_rect.position = Vector2(av_x, av_y)
+	tex_rect.position = Vector2((sz.x - av_sz) * 0.5, 10)
 	tex_rect.size = Vector2(av_sz, av_sz)
+	tex_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	tex_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	tex_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	tex_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -462,65 +438,115 @@ func _build_donor_card(ds: DonorState, pos: Vector2, sz: Vector2) -> Control:
 	card.add_child(tex_rect)
 
 	# Nome
-	var name_lbl := _lbl(ds.name, 15, C_WHITE, true)
-	name_lbl.position = Vector2(0, av_y + av_sz + 2)
+	var name_lbl := _lbl(ds.name, 16, C_WHITE, true)
+	name_lbl.position = Vector2(0, sz.y - 56)
 	name_lbl.size = Vector2(sz.x, 20)
 	name_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(name_lbl)
 
-	# HP bar
-	var hp_y := av_y + av_sz + 22.0
-	var hp_w := sz.x - 16.0
+	# Barra della pazienza con bordo
+	var hp_w := sz.x - 32.0
+	var hp_y := sz.y - 28.0
+	var hp_frame := ColorRect.new()
+	hp_frame.position = Vector2(14, hp_y - 2)
+	hp_frame.size = Vector2(hp_w + 4, 16)
+	hp_frame.color = UiStyle.PANEL_BORDER
+	hp_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(hp_frame)
 	var hp_bg := ColorRect.new()
-	hp_bg.position = Vector2(8, hp_y)
+	hp_bg.position = Vector2(16, hp_y)
 	hp_bg.size = Vector2(hp_w, 12)
-	hp_bg.color = Color(0.14, 0.10, 0.06)
+	hp_bg.color = Color(0.07, 0.07, 0.09)
 	hp_bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(hp_bg)
 
 	ds.hp_max_w = hp_w
 	ds.hp_fill = ColorRect.new()
-	ds.hp_fill.position = Vector2(8, hp_y)
+	ds.hp_fill.position = Vector2(16, hp_y)
 	ds.hp_fill.size = Vector2(hp_w * ds.hp, 12)
 	ds.hp_fill.color = _hp_col(ds.hp)
 	ds.hp_fill.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(ds.hp_fill)
 
-	# Speech bubble (sopra la card, nascosta)
-	var bub_w := sz.x + 16.0
+	# Fumetto sopra la carta: icona di cosa vuole + la frase, con la codina
+	var bub_w := sz.x + 6.0
 	ds.bubble = Control.new()
-	ds.bubble.position = Vector2(-8, -104)
-	ds.bubble.size = Vector2(bub_w, 94)
+	ds.bubble.position = Vector2(-3, -bubble_h - 16)
+	ds.bubble.size = Vector2(bub_w, bubble_h + 10)
 	ds.bubble.visible = false
 	ds.bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(ds.bubble)
 
+	var bub_col := Color(0.96, 0.94, 0.88)
+	var bub_line := Color(0.20, 0.17, 0.12)
+	# codina: quadrato ruotato sotto il fumetto (disegnato prima, cosi' il
+	# pannello ne copre meta' e resta solo la punta verso il donatore)
+	var tail_border := ColorRect.new()
+	tail_border.size = Vector2(18, 18)
+	tail_border.color = bub_line
+	tail_border.position = Vector2(bub_w * 0.5 - 9, bubble_h - 11)
+	tail_border.pivot_offset = Vector2(9, 9)
+	tail_border.rotation_degrees = 45
+	tail_border.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ds.bubble.add_child(tail_border)
+	var tail := ColorRect.new()
+	tail.size = Vector2(14, 14)
+	tail.color = bub_col
+	tail.position = Vector2(bub_w * 0.5 - 7, bubble_h - 11)
+	tail.pivot_offset = Vector2(7, 7)
+	tail.rotation_degrees = 45
+	tail.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ds.bubble.add_child(tail)
+
 	var bsb := StyleBoxFlat.new()
-	bsb.bg_color = Color(0.95, 0.93, 0.86)
-	bsb.set_corner_radius_all(8)
-	bsb.border_color = Color(0.28, 0.22, 0.08)
-	bsb.border_width_left = 2; bsb.border_width_right  = 2
-	bsb.border_width_top  = 2; bsb.border_width_bottom = 2
+	bsb.bg_color = bub_col
+	bsb.set_corner_radius_all(10)
+	bsb.border_color = bub_line
+	bsb.set_border_width_all(2)
 	var bpanel := Panel.new()
-	bpanel.position = Vector2.ZERO
-	bpanel.size = Vector2(bub_w, 94)
+	bpanel.size = Vector2(bub_w, bubble_h)
 	bpanel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	bpanel.add_theme_stylebox_override("panel", bsb)
 	ds.bubble.add_child(bpanel)
+	# copre il bordo superiore della codina dentro al fumetto
+	var tail_cover := ColorRect.new()
+	tail_cover.size = Vector2(22, 8)
+	tail_cover.color = bub_col
+	tail_cover.position = Vector2(bub_w * 0.5 - 11, bubble_h - 10)
+	tail_cover.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ds.bubble.add_child(tail_cover)
 
-	ds.bubble_lbl = _lbl("", 19, Color(0.12, 0.10, 0.04), true)
-	ds.bubble_lbl.position = Vector2(6, 6)
-	ds.bubble_lbl.size = Vector2(bub_w - 12, 82)
+	ds.bubble_icon = TextureRect.new()
+	ds.bubble_icon.position = Vector2(8, (bubble_h - 44) * 0.5)
+	ds.bubble_icon.size = Vector2(44, 44)
+	ds.bubble_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ds.bubble_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ds.bubble_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	ds.bubble_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	ds.bubble.add_child(ds.bubble_icon)
+
+	ds.bubble_lbl = _lbl("", 14, Color(0.12, 0.10, 0.06), true)
+	ds.bubble_lbl.position = Vector2(54, 4)
+	ds.bubble_lbl.size = Vector2(bub_w - 60, bubble_h - 8)
 	ds.bubble_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	ds.bubble_lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	ds.bubble_lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	ds.bubble.add_child(ds.bubble_lbl)
 
-	# Drop zone
 	var di := _states.find(ds)
 	card.gui_input.connect(_on_donor_gui.bind(di))
-
 	return card
+
+
+func _item_style(item: Dictionary, highlighted: bool) -> StyleBoxFlat:
+	var sb := UiStyle.panel_box(12)
+	if highlighted:
+		sb.border_color = C_GOLD
+		sb.set_border_width_all(4)
+	else:
+		sb.border_color = (item["color"] as Color).lightened(0.15)
+		sb.set_border_width_all(3)
+	return sb
 
 
 func _build_item_card(item: Dictionary, item_idx: int, pos: Vector2, sz: Vector2) -> Panel:
@@ -528,37 +554,34 @@ func _build_item_card(item: Dictionary, item_idx: int, pos: Vector2, sz: Vector2
 	card.position = pos
 	card.size = sz
 	card.mouse_filter = Control.MOUSE_FILTER_STOP
+	card.add_theme_stylebox_override("panel", _item_style(item, false))
 
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = (item["color"] as Color).darkened(0.15)
-	sb.border_color = (item["color"] as Color).lightened(0.3)
-	sb.border_width_left = 3; sb.border_width_right  = 3
-	sb.border_width_top  = 3; sb.border_width_bottom = 3
-	sb.set_corner_radius_all(10)
-	sb.shadow_color = Color(0, 0, 0, 0.5)
-	sb.shadow_size = 4; sb.shadow_offset = Vector2(2, 3)
-	card.add_theme_stylebox_override("panel", sb)
+	# fascia del colore del rinfresco in basso, dietro al nome
+	var band := ColorRect.new()
+	band.position = Vector2(3, sz.y - 36)
+	band.size = Vector2(sz.x - 6, 26)
+	band.color = (item["color"] as Color).darkened(0.30)
+	band.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	card.add_child(band)
 
-	# Pixel-art image (NEAREST filter → look pixel-art)
 	if item_idx < _item_textures.size():
-		var img_sz := minf(sz.x * 0.68, sz.y * 0.62)
+		var img_sz := minf(sz.x * 0.55, sz.y - 50.0)
 		var tr := TextureRect.new()
 		tr.texture = _item_textures[item_idx]
 		tr.size = Vector2(img_sz, img_sz)
-		tr.position = Vector2((sz.x - img_sz) * 0.5, sz.y * 0.06)
+		tr.position = Vector2((sz.x - img_sz) * 0.5, 8)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		card.add_child(tr)
 
-	# Label at bottom
-	var lbl := _lbl(item["name"] as String, 14, C_WHITE, true)
-	lbl.position = Vector2(0, sz.y * 0.70)
-	lbl.size = Vector2(sz.x, sz.y * 0.28)
+	var lbl := _lbl(item["name"] as String, 16, C_WHITE, true)
+	lbl.position = Vector2(0, sz.y - 36)
+	lbl.size = Vector2(sz.x, 26)
 	lbl.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	lbl.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	card.add_child(lbl)
-
 	return card
 
 
@@ -569,14 +592,11 @@ func _build_item_card(item: Dictionary, item_idx: int, pos: Vector2, sz: Vector2
 func _on_item_gui(ev: InputEvent, idx: int) -> void:
 	if not _game_active:
 		return
-	var pressed := false
-	var gpos    := Vector2.ZERO
+	# Solo il clic "mouse": su telefono Godot lo genera anche dal tocco.
+	# Il tocco vero (InputEventScreenTouch) qui ha la posizione relativa alla
+	# carta, non allo schermo: creava per un attimo l'anteprima in alto a sinistra.
 	if ev is InputEventMouseButton and (ev as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT and (ev as InputEventMouseButton).pressed:
-		pressed = true; gpos = (ev as InputEventMouseButton).global_position
-	elif ev is InputEventScreenTouch and (ev as InputEventScreenTouch).pressed:
-		pressed = true; gpos = (ev as InputEventScreenTouch).position
-	if pressed:
-		_start_drag(idx, gpos)
+		_start_drag(idx, (ev as InputEventMouseButton).global_position)
 
 
 func _start_drag(idx: int, gpos: Vector2) -> void:
@@ -587,13 +607,7 @@ func _start_drag(idx: int, gpos: Vector2) -> void:
 	_drag_ghost = Panel.new()
 	_drag_ghost.size = Vector2(78, 88)
 	_drag_ghost.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var gsb := StyleBoxFlat.new()
-	gsb.bg_color = (item["color"] as Color).darkened(0.10)
-	gsb.set_corner_radius_all(8)
-	gsb.border_color = C_WHITE
-	gsb.border_width_left = 2; gsb.border_width_right  = 2
-	gsb.border_width_top  = 2; gsb.border_width_bottom = 2
-	_drag_ghost.add_theme_stylebox_override("panel", gsb)
+	_drag_ghost.add_theme_stylebox_override("panel", _item_style(item, true))
 	_drag_ghost.modulate.a = 0.92
 
 	# Pixel-art image in ghost
@@ -602,6 +616,7 @@ func _start_drag(idx: int, gpos: Vector2) -> void:
 		tr.texture = _item_textures[idx]
 		tr.size = Vector2(58, 58)
 		tr.position = Vector2(10, 4)
+		tr.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		tr.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		tr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		tr.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -615,7 +630,7 @@ func _start_drag(idx: int, gpos: Vector2) -> void:
 	_drag_ghost.add_child(gl)
 
 	add_child(_drag_ghost)
-	_drag_ghost.position = gpos - Vector2(39, 44)
+	_drag_ghost.position = gpos - _drag_ghost.size * 0.5
 	_set_item_highlight(idx, true)
 
 
@@ -638,7 +653,7 @@ func _input(event: InputEvent) -> void:
 		pos = (event as InputEventScreenTouch).position; released = true
 
 	if pos != Vector2.ZERO and is_instance_valid(_drag_ghost):
-		_drag_ghost.position = pos - Vector2(50, 30)
+		_drag_ghost.position = pos - _drag_ghost.size * 0.5
 
 	if released:
 		_set_item_highlight(_drag_item, false)
@@ -670,21 +685,7 @@ func _set_item_highlight(idx: int, on: bool) -> void:
 	var card := _item_cards[idx] as Panel
 	if not is_instance_valid(card):
 		return
-	var item: Dictionary = ITEMS[idx]
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = (item["color"] as Color).darkened(0.15)
-	sb.set_corner_radius_all(10)
-	if on:
-		sb.border_color = C_GOLD
-		sb.border_width_left = 4; sb.border_width_right  = 4
-		sb.border_width_top  = 4; sb.border_width_bottom = 4
-	else:
-		sb.border_color = (item["color"] as Color).lightened(0.3)
-		sb.border_width_left = 3; sb.border_width_right  = 3
-		sb.border_width_top  = 3; sb.border_width_bottom = 3
-	sb.shadow_color = Color(0, 0, 0, 0.5)
-	sb.shadow_size = 4; sb.shadow_offset = Vector2(2, 3)
-	card.add_theme_stylebox_override("panel", sb)
+	card.add_theme_stylebox_override("panel", _item_style(ITEMS[idx], on))
 	card.pivot_offset = card.size * 0.5
 	var tw := create_tween()
 	tw.tween_property(card, "scale", Vector2(1.1, 1.1) if on else Vector2(1.0, 1.0), 0.10)
@@ -707,12 +708,12 @@ func _serve(donor_idx: int, item_idx: int) -> void:
 		ds.cooldown = COOLDOWN_AFTER
 		if is_instance_valid(ds.bubble): ds.bubble.visible = false
 		_flash(ds, C_GREEN)
-		_update_req_lbl()
+		_float_text(ds, "+12", C_GREEN)
 	else:
 		_score = maxi(0, _score - 7)
 		ds.hp = maxf(0.0, ds.hp - DECAY_WRONG)
 		_flash(ds, C_RED_C)
-		_set_req_lbl("%s voleva\n%s, non %s!" % [ds.name, ITEMS[ds.request]["name"], ITEMS[item_idx]["name"]])
+		_float_text(ds, "-7", C_RED_C)
 	_update_score()
 	_update_hp(ds)
 
@@ -747,17 +748,18 @@ func _process(delta: float) -> void:
 			# Guard nullo: su Android il node potrebbe non essere ancora pronto
 			if is_instance_valid(ds.bubble_lbl):
 				ds.bubble_lbl.text = str(ph[randi() % ph.size()])
+			if is_instance_valid(ds.bubble_icon) and ds.request < _item_textures.size():
+				ds.bubble_icon.texture = _item_textures[ds.request]
 			if is_instance_valid(ds.bubble):
 				ds.bubble.visible = true
 				_pop_bubble(ds)
-			_update_req_lbl()
 		ds.hp = maxf(0.0, ds.hp - DECAY_PER_SEC * delta)
 		_update_hp(ds)
 		if ds.hp <= 0.0:
 			_score = maxi(0, _score - 6)
 			ds.hp = 0.60; ds.request = -1; ds.cooldown = 3.0
 			if is_instance_valid(ds.bubble): ds.bubble.visible = false
-			_update_score(); _flash(ds, C_RED_C); _update_req_lbl()
+			_update_score(); _flash(ds, C_RED_C); _float_text(ds, "-6", C_RED_C)
 
 
 func _update_hp(ds: DonorState) -> void:
@@ -780,20 +782,20 @@ func _update_score() -> void:
 		_score_lbl.text = "PUNTI: %d" % _score
 
 
-func _update_req_lbl() -> void:
-	for ds in _states:
-		var d := ds as DonorState
-		if d.request != -1:
-			var lbl_text := ""
-			if is_instance_valid(d.bubble_lbl):
-				lbl_text = d.bubble_lbl.text.replace("\n", " ")
-			_set_req_lbl("%s:\n\"%s\"" % [d.name, lbl_text])
-			return
-	_set_req_lbl("I donatori\naspettano...")
-
-
-func _set_req_lbl(text: String) -> void:
-	if is_instance_valid(_req_lbl): _req_lbl.text = text
+## Testo che sale e svanisce sopra la carta del donatore ("+12", "-7"...).
+func _float_text(ds: DonorState, text: String, col: Color) -> void:
+	if not is_instance_valid(ds.card): return
+	var l := _lbl(text, 26, col, true)
+	l.size = Vector2(ds.card.size.x, 32)
+	l.position = ds.card.position + Vector2(0, 4)
+	l.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	l.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	l.add_theme_constant_override("outline_size", 6)
+	add_child(l)
+	var tw := create_tween().set_parallel(true)
+	tw.tween_property(l, "position:y", l.position.y - 60.0, 0.75).set_ease(Tween.EASE_OUT)
+	tw.tween_property(l, "modulate:a", 0.0, 0.75).set_delay(0.25)
+	tw.chain().tween_callback(l.queue_free)
 
 
 func _flash(ds: DonorState, col: Color) -> void:
@@ -833,9 +835,7 @@ func _end_game() -> void:
 
 	var pw := minf(W - 48, 560.0)
 	var ph := minf(H - 80, 460.0)
-	var panel := _make_panel(
-		Vector2((W - pw) * 0.5, (H - ph) * 0.5),
-		Vector2(pw, ph), C_PANEL, C_BORDER, 3)
+	var panel := _ui_panel(Vector2((W - pw) * 0.5, (H - ph) * 0.5), Vector2(pw, ph), 14)
 	add_child(panel)
 
 	var vb := VBoxContainer.new()
@@ -844,12 +844,12 @@ func _end_game() -> void:
 	vb.add_theme_constant_override("separation", 14)
 	panel.add_child(vb)
 
-	vb.add_child(_lbl("COLAZIONE COMPLETATA!", 22, C_GOLD, true))
-	vb.add_child(_hsep(C_BORDER))
+	vb.add_child(_lbl("COLAZIONE COMPLETATA!", 24, UiStyle.TITLE, true))
+	vb.add_child(_hsep(UiStyle.PANEL_BORDER))
 	RunState.score_breakfast = _score
 	vb.add_child(_lbl("Rinfreschi serviti: %d\nPunti colazione: %d\nPUNTEGGIO TOTALE: %d" % [_served_total, _score, RunState.score_total()], 18, C_WHITE, true))
 	PlayGames.submit_score(RunState.score_total())
-	vb.add_child(_hsep(Color(C_BORDER.r, C_BORDER.g, C_BORDER.b, 0.35)))
+	vb.add_child(_hsep(UiStyle.PANEL_BORDER))
 
 	var edu := _lbl(
 		"Ricorda sempre:\n" +
@@ -861,11 +861,11 @@ func _end_game() -> void:
 	edu.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	vb.add_child(edu)
 
-	vb.add_child(_hsep(Color(C_BORDER.r, C_BORDER.g, C_BORDER.b, 0.35)))
+	vb.add_child(_hsep(UiStyle.PANEL_BORDER))
 
 	var wrap := CenterContainer.new()
 	vb.add_child(wrap)
-	var btn := _make_btn("TORNA AL MENU", C_RED_C)
+	var btn := _make_btn("TORNA AL MENU", UiStyle.BTN)
 	btn.custom_minimum_size = Vector2(240, 54)
 	wrap.add_child(btn)
 	btn.pressed.connect(_on_result_menu_pressed)

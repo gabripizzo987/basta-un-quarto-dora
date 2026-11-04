@@ -433,16 +433,12 @@ func _on_breakfast_pressed() -> void:
 	AudioManager.play_sfx("btn_click")
 	_hide_overlay()
 
-	# Raccoglie dati donatori: prima i completati, poi fallback ai presenti in FinalRoom
+	# Sala colazione uguale per tutti: sempre i 5 donatori della giornata
+	# (il minigioco completa comunque fino a 5 se ne mancano)
 	var donor_data: Array = []
-	var ids_source: Array = RunState.donation_completed_ids
-	if ids_source.is_empty():
-		ids_source = RunState.donors_for_final
-	for id in ids_source:
-		var id_int := int(id)
-		if id_int >= 0 and id_int < RunState.donors.size():
-			var d: Dictionary = RunState.donors[id_int]
-			donor_data.append({"name": d.get("name", "Donatore"), "sprite_idx": id_int % 5})
+	for id_int in mini(5, RunState.donors.size()):
+		var d: Dictionary = RunState.donors[id_int]
+		donor_data.append({"name": d.get("name", "Donatore"), "sprite_idx": id_int % 5})
 
 	# Crea e lancia il minigioco su un CanvasLayer dedicato
 	var layer := CanvasLayer.new()

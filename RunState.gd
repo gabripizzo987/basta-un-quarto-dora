@@ -61,7 +61,7 @@ const LABEL_PUZZLE_RULES := [
 	# MEDIO (era il vecchio Difficile)
 	{"first": [[5, 4]], "next": [[6, 5]], "grace": 7.0, "points": 50},
 	# DIFFICILE: due puzzle di fila per ogni donatore
-	{"first": [[5, 4], [5, 4]], "next": [[5, 4], [6, 5]], "grace": 11.5, "points": 80},
+	{"first": [[5, 4], [5, 4]], "next": [[5, 4], [6, 5]], "grace": 14.0, "points": 80},
 ]
 
 ## Stanza emocromo per difficolta':
