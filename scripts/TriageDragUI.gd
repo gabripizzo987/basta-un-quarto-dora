@@ -286,47 +286,43 @@ func _try_drop(mouse_s: Vector2) -> void:
 		# chiudiamo il drag e rimettiamo il donor al parent originale (così non resta “incollato”)
 		_restore_donor()
 
-		# ✅ avviamo gestione scelta senza “async without await”
 		if triage_logic != null and triage_logic.has_method("handle_choice"):
-			resolving_choice = true
 			last_drop_valid = true
-			_dbg("CALL handle_choice(%s) (deferred)" % accepted)
-			triage_logic.call_deferred("handle_choice", accepted)
-
-			# ✅ dopo 1 frame controlliamo se è comparso il popup:
-			# - se popup compare => era sbagliato => NON sparire, e dopo OK può riprovare
-			# - se popup NON compare => consideriamo corretto => sparisci subito
-			call_deferred("_post_choice_check")
+			_dbg("CALL handle_choice(%s)" % accepted)
+			# handle_choice gira subito fino alla sua prima attesa: a quel punto
+			# sappiamo gia' com'e' andata. Prima si controllava un frame dopo, ma
+			# intanto _process azzerava resolving_choice e alcuni donatori
+			# restavano sulla sedia.
+			triage_logic.handle_choice(accepted)
+			_after_choice()
 		return
 
 	# drop fuori: torna alla sedia
 	_restore_donor()
 
-func _post_choice_check() -> void:
-	# questa funzione usa await, quindi dev’essere async (in Godot va bene così)
-	await get_tree().process_frame
-
-	if not resolving_choice:
-		return
-	if triage_logic == null or not triage_logic.has_method("is_error_popup_open"):
-		# se non possiamo sapere, non facciamo sparire (safe)
-		resolving_choice = false
-		return
-
-	var popup_open := bool(triage_logic.call("is_error_popup_open"))
+func _after_choice() -> void:
+	var popup_open := false
+	if triage_logic.has_method("is_error_popup_open"):
+		popup_open = bool(triage_logic.call("is_error_popup_open"))
 
 	if popup_open:
-		# ❌ sbagliato: lasciamo tutto com’è, l’utente clicca OK e poi riprova
+		# ❌ sbagliato: il donatore resta, dopo OK si puo' riprovare
+		# (resolving_choice torna false in _process quando il popup si chiude)
 		_dbg("choice WRONG (popup open) -> keep donor, retry after OK")
-		# resolving_choice resta true finché il popup non si chiude (lo gestiamo in _process)
+		resolving_choice = true
+		return
+
+	# scelta giusta: handle_choice ha bloccato le decisioni e sta aspettando
+	# di chiudere il donatore
+	var locked := triage_logic.has_method("is_decision_locked") and bool(triage_logic.call("is_decision_locked"))
+	resolving_choice = false
+	if not locked:
+		_dbg("choice ignored (nessuna decisione in corso)")
 		return
 
 	# ✅ corretto: sparisce SUBITO
 	_dbg("choice CORRECT (no popup) -> hide donor now")
 	_mark_donor_done()
-	resolving_choice = false
-
-	# chiudi riferimento: questo donor è finito
 	donor = null
 	hit_anchor = null
 

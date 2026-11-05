@@ -107,12 +107,19 @@ func play_sfx(name: String) -> void:
 
 # ── Procedural generators ─────────────────────────────────────────────────────
 
+## Silenzio in coda a ogni suono generato. Con Godot 4.5 su Android il mixer
+## legge qualche campione oltre la fine del suono: se il suono finisce al bordo
+## della memoria il gioco crasha (successo dopo l'ago, suono "correct").
+const TAIL_PAD_SAMPLES := 2048
+
 func _wav(data: PackedByteArray) -> AudioStreamWAV:
+	var padded := data.duplicate()
+	padded.resize(data.size() + TAIL_PAD_SAMPLES * 2)   # i byte nuovi sono 0 = silenzio
 	var w := AudioStreamWAV.new()
 	w.format = AudioStreamWAV.FORMAT_16_BITS
 	w.mix_rate = 44100
 	w.stereo = false
-	w.data = data
+	w.data = padded
 	return w
 
 func _tone(freq: float, dur: float, vol: float, wave: String) -> AudioStreamWAV:
@@ -319,6 +326,11 @@ func _gen_chiptune(bpm: float, melody: Array, bass: Array, chord: Array) -> Audi
 		var idx := n - fo + i
 		var v   := d.decode_s16(idx * 2)
 		d.encode_s16(idx * 2, int(v * (1.0 - float(i) / float(fo))))
+
+	# margine dopo il punto di loop (vedi TAIL_PAD_SAMPLES): ci copio l'inizio
+	# del brano, cosi' anche se il mixer legge oltre la fine il suono resta giusto
+	var pad_bytes: int = mini(TAIL_PAD_SAMPLES, n) * 2
+	d.append_array(d.slice(0, pad_bytes))
 
 	var w := AudioStreamWAV.new()
 	w.format     = AudioStreamWAV.FORMAT_16_BITS

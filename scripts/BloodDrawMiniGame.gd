@@ -266,10 +266,13 @@ func _spawn_blood_drops(count: int) -> void:
 		tw.tween_property(drop, "position", end_pos, dur).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 		tw.tween_property(drop, "modulate:a", 0.0, dur * 0.85).set_delay(dur * 0.15)
 
-		get_tree().create_timer(dur + 0.12).timeout.connect(func():
-			if is_instance_valid(drop):
-				drop.queue_free()
-		)
+		# metodo con nome, niente lambda (su Android crashano)
+		get_tree().create_timer(dur + 0.12).timeout.connect(_free_drop.bind(drop))
+
+
+func _free_drop(drop: Node) -> void:
+	if is_instance_valid(drop):
+		drop.queue_free()
 
 
 func _clamp_needle_x(x: float) -> float:
